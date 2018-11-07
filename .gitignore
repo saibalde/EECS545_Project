@@ -1,0 +1,7 @@
+# Editor temporary files
+*.swp
+*~
+
+# Python byte code files
+*.pyc
+__pycache__/
