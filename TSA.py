@@ -21,28 +21,42 @@ class TSA:
         self.set_y_ell(y_ell)
         self.L_uu_inv = np.zeros([mod_u,mod_u])
         self.f = np.zeros([mod_u,1])
+        self.lookahead_risk = np.zeros(mod_u)
+        self.marginals = np.zeros(mod_u)
+        
+        
+    
     '''
     -- Eq. (10) from TSA; variables here named accordingly
     -- Function for computing f_k, the decision value of node k s.t. k \in u
     -- After computing f, we must get marginals, P(Y_k=1|Y_\ell = y_\ell) ~ sigma(f_k)
        for each k 
     -- y_ell are labels for ell; y_ell[i] corresponds to index ell[i]
+    -- toggle is true if computingmarginals in Eq. (7); false otherwise
+    -- Need to make ell and y_ell optional arguments
     '''
-    def calc_marginals(self, ell, y_ell, u):
+    def calc_marginals(self, ell, y_ell, u, toggle):
         L_uu = subarray(self.graph.lapMat,u,u)
-        L_ul = subarray(self.graph.lapMat,ell,u,ell)
+        L_ul = subarray(self.graph.lapMat,u,ell)
         
         #make this member variable because we will use this for the dongle
         #trick; this is also the var G in Appendix A.3
         self.L_uu_inv = np.linalg.inv(L_uu) 
-        L_uu_inv_kk = self.L_uu_inv.diagonal()       
+        L_uu_inv_kk = self.L_uu_inv.diagonal()
+        L_uu_inv_kk = L_uu_inv_kk.reshape([len(L_uu_inv_kk),1])
         
-        self.f = np.multiply(-2.0/L_uu_inv_kk,np.matmul(np.matmul(L_uu_inv,L_ul),y_ell)) 
-
-        #should be member var or no? no for now
-        marginals = 1.0/(1+np.exp(-self.f))
+        f = np.multiply(-2.0/L_uu_inv_kk, \
+                             np.matmul(np.matmul(self.L_uu_inv,L_ul),y_ell)) 
+        if toggle:
+            self.f = f
+            
+        marginals = 1.0/(1+np.exp(f))
         
         return marginals
+    
+    
+    
+    
     '''
     -- Function for computing f using the dongle trick; see last eqn of TSA paper
     -- i here is
@@ -50,16 +64,16 @@ class TSA:
     -- This function should be called instead of calc_marginals after the 1st
        query
     '''
-    def dongle_trick(self,i,y0):
+    def dongle_trick(self,i,y_0):
         G_diag = self.L_uu_inv.diagonal()  
         G_kk = G_diag                    #note G_kk is actually [G_kk]_k, a set
-        G_ki = self.L_uu_inv[u,i]
+        G_ki = self.L_uu_inv[self.u,i]
         G_ii = self.L_uu_inv[i,i]
-        f_kk = self.f[self.u]
+        #f_kk = self.f[self.u]
         f_i = self.f[i]
 
         left_hadamard = 1/(G_kk - np.square(G_ki)/G_ii)
-        right_hadamard = np.multiply(0.5*G_diag,f) + \
+        right_hadamard = np.multiply(0.5*G_diag,self.f) + \
             (y_0/G_ii - f_i/2)*self.L_uu_inv[:,i]
 
         #LHS is [f_k^{+i}]_{k \in \bar{u}} after observing Y_{\ell \union {i}}
@@ -67,6 +81,8 @@ class TSA:
         marginals = 1.0/(1+np.exp(-self.f))
 
         return marginals
+    
+    
     
     '''    
     -- Eq. (6) from TSA paper
@@ -76,7 +92,7 @@ class TSA:
     -- ell_q is the set of indices for ell and q
     '''
     def calc_zero_one_risk(self,q,y_ell_q,ell_q):
-        zero_one_risk = 0
+        zero_one_risk = np.zeros(2)
         
         #remove q from u and store in u_excluding_q
         u_excluding_q = np.setdiff1d(self.u,q) 
@@ -88,20 +104,22 @@ class TSA:
         identical except for the first element which is 1 & -1 in the 1st&2nd 
         columns, respectively
         '''
-        marginals = self.calc_marginals(ell_q,y_ell_q,u_excluding_q) 
+        marginals = self.calc_marginals(ell_q,y_ell_q,u_excluding_q,False) 
 
         #note that zero_one_risk is going to be a 1x2 array
         #the first column corresponds to Y_q = [1,y_ell] and the second to
         #Y_q = [-1,y_ell]
-        for i in range(0,size(marginals)):
-            if self.marginals[i,0] >= 0.5:
-                self.zero_one_risk[0] += 1 - self.marginals[i,0]
+        #print(marginals.shape)
+        num_rows, num_cols = marginals.shape
+        for i in range(0,num_rows):
+            if marginals[i,0] >= 0.5:
+                zero_one_risk[0] += 1 - marginals[i,0]
             else:
-                self.zero_one_risk[0] += 1-(1-self.marginals[i,0])                
-            if self.marginals[i,1] >= 0.5:
-                self.zero_one_risk[1] += 1 - self.marginals[i,1]
+                zero_one_risk[0] += 1 - (1 - marginals[i,0])                
+            if marginals[i,1] >= 0.5:
+                zero_one_risk[1] += 1 - marginals[i,1]
             else:
-                self.zero_one_risk[1] += 1-(1-self.marginals[i,1])        
+                zero_one_risk[1] += 1 - (1 - marginals[i,1])        
             
         zero_one_risk *= 1.0/self.graph.nNodes
         
@@ -120,24 +138,26 @@ class TSA:
         y_ell_q[:,0] = np.append(self.y_ell,1)
         y_ell_q[:,1] = np.append(self.y_ell,-1)
         
+        #computes marginals for all q \in u. This is the marginal in Eq.(7)
+        self.marginals = self.calc_marginals(self.ell,self.y_ell,self.u,True)  #marginals in Eq. (7)
+        
         for i in range(0,len(self.u)):
             q = self.u[i]        #var for storing queried node idx
             
             ell_q = np.append(self.ell,q)   #ell with addition of q
             y_ell_q = np.zeros((ell_q.size,2))     #var for storing labels for ell & q
 
-        
             #compute zero-one risk
             zero_one_risk = self.calc_zero_one_risk(q,y_ell_q,ell_q)
         
             #note this computes marginals for all of u
             #how do i write an optional arg for the below?
-            marginals = self.calc_marginals(self.ell,self.y_ell,self.u)  #marginals in Eq. (7)
-        
+
             #Compute lookahead_risk for all of q \in u
             #look_ahead risk should be a (u.size,) size 1-D array
-            self.lookahead_risk[i] = zero_one_risk[i] * marginals[i] + \
-                zero_one_risk[1] * (1 - marginals[i])
+            
+            self.lookahead_risk[i] = zero_one_risk[0] * self.marginals[i] + \
+                zero_one_risk[1] * (1 - self.marginals[i])
         
         
         
@@ -146,12 +166,22 @@ class TSA:
     -- Finds the query q that minimizes the lookahead zero one risk
     '''    
     def solve_eem(self):
-        idx = np.argmin(lookahead_risk)
+        idx = np.argmin(self.lookahead_risk)
         q = self.u[idx]
-
-        return q
         
+        if self.marginals[idx]>=0.5:
+            y_q = 1
+        else:
+            y_q = -1
+        
+        return q, y_q
+        
+    
+    
     #def set_idx:
+    
+    
+    
 
     '''    
     setter functions for TSA class
