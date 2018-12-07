@@ -4,62 +4,38 @@
 import numpy as np
 
 """
-A class for encoding undirected, fully connected graphs, without self-loops
+A class for encoding undirected, fully connected graphs
 """
 class Graph:
     """
-    Graph(nNodes)
+    Graph(num_nodes)
 
     Create a graph with given number of nodes. Initially, the graph is fully
     disconnected.
     """
-    def __init__(self, nNodes):
-        self.nNodes = nNodes
-        self.edgeWt = np.zeros(nNodes * (nNodes - 1) // 2, dtype=np.float64)
-        self.lapMat = np.zeros((nNodes, nNodes), dtype=np.float64)
+    def __init__(self, num_nodes):
+        self.num_nodes = num_nodes
+        self.weights   = np.zeros((num_nodes, num_nodes, dtype=np.float)
+        self.laplacian = np.zeros((num_nodes, num_nodes), dtype=np.float)
 
     """
-    Graph.edgeLinearIndex(i, j)
-
-    Map the index for edge between nodes i and j to the linear index for the
-    edge weight array
-    """
-    def edgeLinearIndex(self, i, j):
-        if i == j:
-            raise ValueError("Graph does not have self loops")
-
-        # ensure that i < j
-        if i > j:
-            i, j = j, i
-
-        # return the linear index
-        return i * self.nNodes + j - (i + 1) * (i + 2) // 2
-
-    """
-    Graph.getEdgeWeight(i, j)
-
-    Return the weight of edge between nodes i and j. Nodes are zero-indexed.
-    """
-    def getEdgeWeight(self, i, j):
-        return self.edgeWt[self.edgeLinearIndex(i, j)]
-
-    """
-    Graph.setEdgeWeight(i, j, weight)
+    Graph.set_weight(i, j, weight)
 
     Set the weight of edge between nodes i and j. Nodes are zero-indexed
     """
-    def setEdgeWeight(self, i, j, weight):
+    def set_weight(self, i, j, weight):
         # retrive old weight
-        old_weight = self.getEdgeWeight(i, j)
+        old_weight = self.weights[i, j]
 
         # assign new edge weight
-        self.edgeWt[self.edgeLinearIndex(i, j)] = weight
+        self.weights[i, j] = weight
+        self.weights[j, i] = weight
 
         # update laplacian entries at (i, i), (i, j), (j, i) and (j, j)
-        self.lapMat[i, i] += weight - old_weight
-        self.lapMat[i, j] = -weight
-        self.lapMat[j, i] = -weight
-        self.lapMat[j, j] += weight - old_weight
+        self.laplacian[i, i] += weight - old_weight
+        self.laplacian[i, j] = -weight
+        self.laplacian[j, i] = -weight
+        self.laplacian[j, j] += weight - old_weight
 
 """
 A class for storing graphs with (partially) labelled graphs. Labels are
@@ -75,6 +51,7 @@ class LabelledGraph(Graph):
     def __init__(self, nNodes):
         Graph.__init__(self, nNodes)
         self.labels = np.zeros(nNodes, dtype=np.float64)
+        self.labelled_indices = np.
 
     """
     LabelledGraph.getLabel(i)

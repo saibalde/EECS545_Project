@@ -36,8 +36,8 @@ class TSA:
     -- Need to make ell and y_ell optional arguments
     '''
     def calc_marginals(self, ell, y_ell, u, toggle):
-        L_uu = subarray(self.graph.lapMat,u,u)
-        L_ul = subarray(self.graph.lapMat,u,ell)
+        L_uu = subarray(self.graph.laplacian,u,u)
+        L_ul = subarray(self.graph.laplacian,u,ell)
         
         #make this member variable because we will use this for the dongle
         #trick; this is also the var G in Appendix A.3
@@ -121,7 +121,7 @@ class TSA:
             else:
                 zero_one_risk[1] += 1 - (1 - marginals[i,1])        
             
-        zero_one_risk *= 1.0/self.graph.nNodes
+        zero_one_risk *= 1.0/self.graph.num_nodes
         
         return zero_one_risk 
         
