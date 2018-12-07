@@ -15,7 +15,7 @@ class Graph:
     """
     def __init__(self, num_nodes):
         self.num_nodes = num_nodes
-        self.weights   = np.zeros((num_nodes, num_nodes, dtype=np.float)
+        self.weights   = np.zeros((num_nodes, num_nodes), dtype=np.float)
         self.laplacian = np.zeros((num_nodes, num_nodes), dtype=np.float)
 
     """
