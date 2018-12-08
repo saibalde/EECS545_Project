@@ -20,10 +20,10 @@ y_ell = np.zeros([len(ell),1])
 y_ell[:] = 1
 
 graph_instance = Graph(nNodes)
-graph_instance.lapMat = np.identity(nNodes)
+graph_instance.laplacian = np.identity(nNodes)
 
 TSA_instance = TSA(ell,u,y_ell,graph_instance)
 
 TSA_instance.calc_lookahead_risk()
 
-[q,y_q] = TSA_instance.solve_eem()
+q,y_q = TSA_instance.solve_eem()
