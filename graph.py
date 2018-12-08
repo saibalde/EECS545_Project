@@ -37,34 +37,34 @@ class Graph:
         self.laplacian[j, i] = -weight
         self.laplacian[j, j] += weight - old_weight
 
-"""
-A class for storing graphs with (partially) labelled graphs. Labels are
-{+1, -1}, unlabelled nodes are indicated with a label of 0.
-"""
-class LabelledGraph(Graph):
-    """
-    LabelledGraph(nNodes)
-
-    Create a graph with given number of nodes. Initially, the graph is fully
-    disconnected and all nodes are unlabelled.
-    """
-    def __init__(self, nNodes):
-        Graph.__init__(self, nNodes)
-        self.labels = np.zeros(nNodes, dtype=np.float64)
-        self.labelled_indices = np.
-
-    """
-    LabelledGraph.getLabel(i)
-
-    Return the label of node i. Nodes are zero-indexed.
-    """
-    def getLabel(self, i):
-        return self.labels[i]
-
-    """
-    LabelledGraph.setLabel(i, label)
-
-    Set the label of node i. Nodes are zero-indexed.
-    """
-    def setLabel(self, i, label):
-        self.labels[i] = label
+# """
+# A class for storing graphs with (partially) labelled graphs. Labels are
+# {+1, -1}, unlabelled nodes are indicated with a label of 0.
+# """
+# class LabelledGraph(Graph):
+#     """
+#     LabelledGraph(nNodes)
+# 
+#     Create a graph with given number of nodes. Initially, the graph is fully
+#     disconnected and all nodes are unlabelled.
+#     """
+#     def __init__(self, nNodes):
+#         Graph.__init__(self, nNodes)
+#         self.labels = np.zeros(nNodes, dtype=np.float64)
+#         self.labelled_indices = np.
+#
+#     """
+#     LabelledGraph.getLabel(i)
+#
+#     Return the label of node i. Nodes are zero-indexed.
+#     """
+#     def getLabel(self, i):
+#         return self.labels[i]
+#
+#     """
+#     LabelledGraph.setLabel(i, label)
+#
+#     Set the label of node i. Nodes are zero-indexed.
+#     """
+#     def setLabel(self, i, label):
+#         self.labels[i] = label
