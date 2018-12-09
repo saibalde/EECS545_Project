@@ -11,27 +11,6 @@ This module defines a class for constructing a fully connected graphs.
 import numpy as np
 import bisect
 
-def subarray(array, row_indices, col_indices):
-    """Create a subarray with given row and column indices
-
-    Parameters
-    ----------
-    array: numpy.ndarray
-        Two dimensional NumPy array
-    row_indices: set
-        Set of row indices to select
-    col_indices: set
-        Set of column indices to select
-
-    Returns
-    -------
-    numpy.ndarray
-        Two dimensional array constructed using selected rows and columns
-    """
-    rows = [i for i in row_indices for j in col_indices]
-    cols = [j for i in row_indices for j in col_indices]
-    return array[(rows, cols)].reshape(len(row_indices), len(col_indices))
-
 """
 A class for encoding undirected, fully connected graphs
 """
@@ -52,6 +31,10 @@ class Graph:
         Node indices for which the labels were not queried so far
     labels: numpy.ndarray
         Labels of the nodes
+    LuuInv: numpy.ndarray
+
+    fu: numpy.ndarray
+
     """
     def __init__(self, num_nodes):
         """Construct a fully connected graph
@@ -71,6 +54,8 @@ class Graph:
         self.l = []
         self.u = [i for i in range(num_nodes)]
         self.labels = np.zeros(num_nodes, dtype=np.int8)
+        self.LuuInv = None
+        self.fu = None
 
     def set_weight(self, i, j, weight):
         """Set the weight of an edge
@@ -117,12 +102,22 @@ class Graph:
         bisect.insort(self.l, i)
         self.u.remove(i)
 
-    def sublaplacian_uu_inv(self):
+    def laplacian_uu_inv(self):
         """Return inverse of unlabelled-unlabelled block of graph Laplacian
-        """
-        raise NotImplementedError
 
-    def sublaplacian_ul(self):
-        """Return unlabelled-labelled block of graph Laplacian
+        Returns
+        -------
+        numpy.ndarray
+
         """
-        raise NotImplementedError
+        return self.LuuInv
+
+    def predicted_labels(self):
+        """Return predicted labels for the unlabelled nodes of the graph
+
+        Returns
+        -------
+        numpy.ndarray
+
+        """
+        return self.fu
