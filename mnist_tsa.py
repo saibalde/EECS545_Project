@@ -29,13 +29,13 @@ while True:
         break
 
     # compute next node to label
-    index = TSA(graph)
+    queried_index = query_with_TSA(graph)
 
     # query the oracle
-    label = labels[index]
+    label = labels[queried_index]
 
     # update the graph with true label
-    graph.set_label(index, label)
+    graph.set_label(queried_index, label)
 
 # predict on test set and compute error
 ...
