@@ -1,16 +1,21 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import random
+import mnist_to_graph
+
 from graph import Graph
-from tsa import TSA
 from lp import LP
+from tsa import TSA
 
 # Initialize Graph
-graph = ...
-labels = ...
+graph, labels, num_train, num_test = mnist_to_graph.init(4, 9)
 
 # Randomly initialize some labels
-...
+for i in range(25):
+    index = random.randint(0, num_train - 1)
+    label = labels[index]
+    graph.set_label(index, label)
 
 # Run the TSA algorithm
 while True:
