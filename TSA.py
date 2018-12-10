@@ -8,21 +8,27 @@ Date: 11-06-2018
 import numpy as np
 from util import subarray
 
+
+def query_with_TSA(graph):
+   TSA_instance = TSA(graph)
+   TSA_instance.calc_lookahead_risk()
+   q = TSA_instance.solve_eem()
+
+   return q;
+
 """
 Class for Two-Step Approximation (The Query Step)
 """
 class TSA:
-    def __init__(self, ell, u, y_ell, graph):
+    # def __init__(self, ell, u, y_ell, graph):
+    def __init__(self, graph):
         #does this require operator= ?
-        mod_u = len(u)
         self.graph = graph          #may change later from composition to inheritance
-        self.set_ell(ell)           #ell is a set of labeled indices
-        self.set_u(u)               #u is a set of unlabeled indices
-        self.set_y_ell(y_ell)
-        self.L_uu_inv = np.zeros([mod_u,mod_u])
-        self.f = np.zeros([mod_u,1])
-        self.lookahead_risk = np.zeros(mod_u)
-        self.marginals = np.zeros(mod_u)
+        len_u = len(self.graph.u)
+        self.set_y_ell(graph.labels[graph.l])
+        self.f = np.zeros([len_u,1])
+        self.lookahead_risk = np.zeros(len_u)
+        self.marginals = np.zeros(len_u)
         
         
     
@@ -32,21 +38,16 @@ class TSA:
     -- After computing f, we must get marginals, P(Y_k=1|Y_\ell = y_\ell) ~ sigma(f_k)
        for each k 
     -- y_ell are labels for ell; y_ell[i] corresponds to index ell[i]
-    -- toggle is true if computingmarginals in Eq. (7); false otherwise
-    -- Need to make ell and y_ell optional arguments
+    -- toggle is true if computing marginals in Eq. (7); false otherwise
     '''
     def calc_marginals(self, ell, y_ell, u, toggle):
-        L_uu = subarray(self.graph.laplacian,u,u)
-        L_ul = subarray(self.graph.laplacian,u,ell)
-        
-        #make this member variable because we will use this for the dongle
         #trick; this is also the var G in Appendix A.3
-        self.L_uu_inv = np.linalg.inv(L_uu) 
-        L_uu_inv_kk = self.L_uu_inv.diagonal()
-        L_uu_inv_kk = L_uu_inv_kk.reshape([len(L_uu_inv_kk),1])
+        # self.L_uu_inv = np.linalg.inv(L_uu) 
+        laplacian_uu_inv_kk = self.graph.laplacian_uu_inv.diagonal()
+        laplacian_uu_inv_kk = laplacian_uu_inv_kk.reshape([len(laplacian_uu_inv_kk),1])
         
-        f = np.multiply(-2.0/L_uu_inv_kk, \
-                             np.matmul(np.matmul(self.L_uu_inv,L_ul),y_ell)) 
+        f = np.multiply(-2.0/laplacian_uu_inv_kk, \
+                             np.matmul(np.matmul(self.graph.laplacian_uu_inv,self.graph.laplacian_ul),y_ell)) 
         if toggle:
             self.f = f
             
@@ -65,16 +66,16 @@ class TSA:
        query
     '''
     def dongle_trick(self,i,y_0):
-        G_diag = self.L_uu_inv.diagonal()  
+        G_diag = self.graph.laplacian_uu_inv.diagonal()  
         G_kk = G_diag                    #note G_kk is actually [G_kk]_k, a set
-        G_ki = self.L_uu_inv[self.u,i]
-        G_ii = self.L_uu_inv[i,i]
+        G_ki = self.graph.laplacian_uu_inv[self.graph.u,i]
+        G_ii = self.graph.laplacian_uu_inv[i,i]
         #f_kk = self.f[self.u]
         f_i = self.f[i]
 
         left_hadamard = 1/(G_kk - np.square(G_ki)/G_ii)
         right_hadamard = np.multiply(0.5*G_diag,self.f) + \
-            (y_0/G_ii - f_i/2)*self.L_uu_inv[:,i]
+            (y_0/G_ii - f_i/2)*self.graph.laplacian_uu_inv[:,i]
 
         #LHS is [f_k^{+i}]_{k \in \bar{u}} after observing Y_{\ell \union {i}}
         self.f = 2*np.multply(left_hadamard,right_hadamard)
@@ -95,7 +96,7 @@ class TSA:
         zero_one_risk = np.zeros(2)
         
         #remove q from u and store in u_excluding_q
-        u_excluding_q = np.setdiff1d(self.u,q) 
+        u_excluding_q = np.setdiff1d(self.graph.u,q) 
         
         '''
         Compute marginals in Eq. 6; note that it is computed for the entire
@@ -139,12 +140,12 @@ class TSA:
         y_ell_q[:,1] = np.append(self.y_ell,-1)
         
         #computes marginals for all q \in u. This is the marginal in Eq.(7)
-        self.marginals = self.calc_marginals(self.ell,self.y_ell,self.u,True)  #marginals in Eq. (7)
+        self.marginals = self.calc_marginals(self.graph.l,self.y_ell,self.graph.u,True)  #marginals in Eq. (7)
         
-        for i in range(0,len(self.u)):
-            q = self.u[i]        #var for storing queried node idx
+        for i in range(0,len(self.graph.u)):
+            q = self.graph.u[i]        #var for storing queried node idx
             
-            ell_q = np.append(self.ell,q)   #ell with addition of q
+            ell_q = np.append(self.graph.l,q)   #ell with addition of q
             y_ell_q = np.zeros((ell_q.size,2))     #var for storing labels for ell & q
 
             #compute zero-one risk
@@ -167,34 +168,20 @@ class TSA:
     '''    
     def solve_eem(self):
         idx = np.argmin(self.lookahead_risk)
-        q = self.u[idx]
+        q = self.graph.u[idx]
         
-        if self.marginals[idx]>=0.5:
-            y_q = 1
-        else:
-            y_q = -1
+        # if self.marginals[idx]>=0.5:
+        #     y_q = 1
+        # else:
+        #     y_q = -1
         
-        return q, y_q
+        return q#, y_q
         
     
     
     #def set_idx:
     
     
-    
-
-    '''    
-    setter functions for TSA class
-    '''
-    def set_u(self,u):
-        assert type(u) == np.ndarray
-        self.u = u
-        
-    def set_ell(self,ell):
-        assert type(ell) == np.ndarray
-
-        self.ell = ell
-
     def set_y_ell(self,y_ell):
         assert type(y_ell) == np.ndarray
 

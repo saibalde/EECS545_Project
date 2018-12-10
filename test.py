@@ -8,22 +8,25 @@ Created on Mon Nov 26 09:17:19 2018
 
 import numpy as np
 from graph import Graph
-from TSA import TSA
+from TSA import TSA,  query_with_TSA
 
-nNodes = 100
-N = np.arange(0,nNodes)
+# nNodes = 100
+# N = np.arange(0,nNodes)
 
-stop = 50
-ell = N[0:stop]
-u = N[stop:nNodes]
-y_ell = np.zeros([len(ell),1])
-y_ell[:] = 1
+# stop = 50
+# ell = N[0:stop]
+# u = N[stop:nNodes]
+# y_ell = np.zeros([len(ell),1])
+# y_ell[:] = 1
 
-graph_instance = Graph(nNodes)
-graph_instance.laplacian = np.identity(nNodes)
+# d = np.zeros((4,1),dtype=np.int8)
+# d[0,:] = 5
+# d[2,:] = 2
+# l = [i for i in range(2)];
+# d[l] = 10
+# p = d[l];
+# print(type(p))
+# print(len(l))
 
-TSA_instance = TSA(ell,u,y_ell,graph_instance)
-
-TSA_instance.calc_lookahead_risk()
-
-q,y_q = TSA_instance.solve_eem()
+graph_al = Graph(0)
+query_with_TSA(graph_al)
