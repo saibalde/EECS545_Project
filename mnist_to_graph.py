@@ -26,6 +26,7 @@ def load_subset(digit1, digit2, num_train, num_test):
         raise RuntimeError
     train_subset = np.random.choice(train_subset, size=num_train,
                                     replace=False)
+    #train_subset = tain_subset[0:num_train]
 
     x_train_subset = x_train[train_subset]
     y_train_subset = np.array(y_train[train_subset], dtype=np.int8)
@@ -42,6 +43,7 @@ def load_subset(digit1, digit2, num_train, num_test):
         raise RuntimeError
     test_subset = np.random.choice(test_subset, size=num_test,
                                    replace=False)
+    #test_subset = test_subset[0:num_test]
 
     x_test_subset = x_test[test_subset]
     y_test_subset = np.array(y_test[test_subset], dtype=np.int8)
