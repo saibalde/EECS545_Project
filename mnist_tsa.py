@@ -2,10 +2,11 @@
 # -*- coding: utf-8 -*-
 
 import random
+import numpy as np
 
 from  mnist_to_graph import initialize_graph
 from lp import LP
-from tsa import TSA
+from TSA import query_with_TSA
 
 # Initialize Graph
 num_train = 100
@@ -16,19 +17,18 @@ graph, labels = initialize_graph(4, 9, num_train, num_test, sigma)
 # Randomly initialize some labels
 init_num_labels = 25
 for i in range(init_num_labels):
-    index = random.randint(0, num_train - 1)
-    label = labels[index]
-    graph.set_label(index, label)
+    graph.set_label(i, labels[i])
 
 # Initial label propagation
 LP(graph)
-accuracy = (graph.labels == labels).sum() / labels.size()
+accuracy = (graph.labels == labels).sum() / labels.size
 print(len(graph.l), ' ', accuracy)
 
 # Run the TSA algorithm
 num_max_labels = 75
-for i in range(num_max_labels)
+for i in range(num_max_labels):
     # compute next node to label
+    # queried_index = init_num_labels+i
     queried_index = query_with_TSA(graph)
 
     # query the oracle

@@ -139,7 +139,7 @@ class Graph:
         return self.LuuInv
 
     def laplacian_ul(self):
-        return subarray(self.laplacian, u, l)
+        return subarray(self.laplacian, self.u, self.l)
 
     def predicted_labels(self):
         """Return predicted labels for the unlabelled nodes of the graph
