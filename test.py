@@ -8,7 +8,7 @@ Created on Mon Nov 26 09:17:19 2018
 
 import numpy as np
 from graph import Graph
-from TSA import TSA
+from TSA import TSA,  query_with_TSA
 
 # nNodes = 100
 # N = np.arange(0,nNodes)
@@ -28,10 +28,5 @@ from TSA import TSA
 # print(type(p))
 # print(len(l))
 
-def query_with_TSA(graph):
-   TSA_instance = TSA(graph)
-   TSA_instance.calc_lookahead_risk()
-   q = TSA_instance.solve_eem()
-
-   return q
-   # q,y_q = TSA_instance.solve_eem()
+graph_al = Graph(0)
+query_with_TSA(graph_al)

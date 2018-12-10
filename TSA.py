@@ -23,12 +23,9 @@ class TSA:
     # def __init__(self, ell, u, y_ell, graph):
     def __init__(self, graph):
         #does this require operator= ?
-        len_u = len(u)
         self.graph = graph          #may change later from composition to inheritance
-        # self.set_ell(ell)           #ell is a set of labeled indices
-        # self.set_u(u)               #u is a set of unlabeled indices
+        len_u = len(self.graph.u)
         self.set_y_ell(graph.labels[graph.l])
-        # self.L_uu_inv = np.zeros([len_u,len_u])
         self.f = np.zeros([len_u,1])
         self.lookahead_risk = np.zeros(len_u)
         self.marginals = np.zeros(len_u)
@@ -41,14 +38,9 @@ class TSA:
     -- After computing f, we must get marginals, P(Y_k=1|Y_\ell = y_\ell) ~ sigma(f_k)
        for each k 
     -- y_ell are labels for ell; y_ell[i] corresponds to index ell[i]
-    -- toggle is true if computingmarginals in Eq. (7); false otherwise
-    -- Need to make ell and y_ell optional arguments
+    -- toggle is true if computing marginals in Eq. (7); false otherwise
     '''
     def calc_marginals(self, ell, y_ell, u, toggle):
-        # L_uu = subarray(self.graph.laplacian,u,u)
-        self.graph.laplacian_ul = subarray(self.graph.laplacian,u,ell)
-        
-        #make this member variable because we will use this for the dongle
         #trick; this is also the var G in Appendix A.3
         # self.L_uu_inv = np.linalg.inv(L_uu) 
         laplacian_uu_inv_kk = self.graph.laplacian_uu_inv.diagonal()
@@ -76,7 +68,6 @@ class TSA:
     def dongle_trick(self,i,y_0):
         G_diag = self.graph.laplacian_uu_inv.diagonal()  
         G_kk = G_diag                    #note G_kk is actually [G_kk]_k, a set
-        # G_ki = self.graph.laplacian_uu_inv[self.u,i]
         G_ki = self.graph.laplacian_uu_inv[self.graph.u,i]
         G_ii = self.graph.laplacian_uu_inv[i,i]
         #f_kk = self.f[self.u]
