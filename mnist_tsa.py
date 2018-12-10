@@ -2,32 +2,32 @@
 # -*- coding: utf-8 -*-
 
 import random
-import mnist_to_graph
 
-from graph import Graph
+from  mnist_to_graph import initialize_graph
 from lp import LP
 from tsa import TSA
 
 # Initialize Graph
-graph, labels, num_train, num_test = mnist_to_graph.init(4, 9)
+num_train = 100
+num_test = 0
+sigma = 2.0e3
+graph, labels = initialize_graph(4, 9, num_train, num_test, sigma)
 
 # Randomly initialize some labels
-for i in range(25):
+init_num_labels = 25
+for i in range(init_num_labels):
     index = random.randint(0, num_train - 1)
     label = labels[index]
     graph.set_label(index, label)
 
+# Initial label propagation
+LP(graph)
+accuracy = (graph.labels == labels).sum() / labels.size()
+print(len(graph.l), ' ', accuracy)
+
 # Run the TSA algorithm
-while True:
-    # predict labels
-    LP(graph)
-
-    # compute training error and stop if done
-    training_error = ...
-    
-    if error < 1.0e-06:
-        break
-
+num_max_labels = 75
+for i in range(num_max_labels)
     # compute next node to label
     queried_index = query_with_TSA(graph)
 
@@ -37,5 +37,13 @@ while True:
     # update the graph with true label
     graph.set_label(queried_index, label)
 
+    # predict labels
+    LP(graph)
+
+    # compute training error and stop if done
+    accuracy = (graph.labels == labels).sum() / labels.size
+
+    print(len(graph.l), ' ', accuracy)
+
 # predict on test set and compute error
-...
+# ...
