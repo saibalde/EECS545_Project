@@ -12,12 +12,20 @@ def _download_data():
     if not os.path.isfile("mnist.pkl"):
         mnist.init()
 
-def load_subset(digit1, digit2):
+def load_subset(digit1, digit2, num_train, num_test):
     _download_data()
 
     x_train, y_train, x_test, y_test = mnist.load()
 
-    train_subset = np.logical_or(y_train == digit1, y_train == digit2)
+    # subset training dataset
+    total_train = x_train.shape[0]
+    train_subset = [i for i in range(total_train)
+                    if y_train[i] == digit1 or y_train[i] == digit2]
+
+    if len(train_subset) < num_train:
+        raise RuntimeError
+    train_subset = np.random.choice(train_subset, size=num_train,
+                                    replace=False)
 
     x_train_subset = x_train[train_subset]
     y_train_subset = np.array(y_train[train_subset], dtype=np.int8)
@@ -25,7 +33,15 @@ def load_subset(digit1, digit2):
     y_train_subset[y_train_subset == digit1] = -1
     y_train_subset[y_train_subset == digit2] = 1
 
-    test_subset = np.logical_or(y_test == digit1, y_test == digit2)
+    # subset test dataset
+    total_test = x_test.shape[0]
+    test_subset = [i for i in range(total_test)
+                   if y_test[i] == digit1 or y_train[i] == digit2]
+
+    if len(test_subset) < num_train:
+        raise RuntimeError
+    test_subset = np.random.choice(test_subset, size=num_test,
+                                   replace=False)
 
     x_test_subset = x_test[test_subset]
     y_test_subset = np.array(y_test[test_subset], dtype=np.int8)
@@ -48,14 +64,14 @@ def _generate_graph(x_train, x_test, sigma):
 
     graph.compute_laplacian()
 
-def init(digit1, digit2, sigma):
-    x_train, y_train, x_test, y_test = load_subset(digit1, digit2)
+    return graph
 
-    num_train = y_train.shape[0]
-    num_test = y_test.shape[0]
+def initialize_graph(digit1, digit2, num_train, num_test, sigma):
+    x_train, y_train, x_test, y_test = load_subset(digit1, digit2, num_train,
+                                                   num_test)
 
     graph = _generate_graph(x_train, x_test, sigma)
 
     labels = np.hstack((y_train, y_test))
 
-    return (graph, labels, num_train, num_test)
+    return (graph, labels)
