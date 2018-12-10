@@ -22,14 +22,21 @@ After that, LP takes this set and uses it to predict the labels on the rest of t
 
 import numpy as np
 from numpy import linalg
+
+from mnist_to_graph import initialize_graph
+from lp import LP
+
+n = 100
+l = 25
+graph, labels = initialize_graph(4, 9, n, 0, 2.0e3)
+L = graph.laplacian
+
 #import the graph here, only the Laplacian L is needed
-n=50 #n=|V|, numbers of nodes of the graph
-l=10 #l=budget of nodes we want to learn their true label
-import random
-L_r=np.random.rand(n,n) #example
-L=(L_r + L_r.T)/2 #example
-
-
+#n=50 #n=|V|, numbers of nodes of the graph
+#l=10 #l=budget of nodes we want to learn their true label
+#import random
+#L_r=np.random.rand(n,n) #example
+#L=(L_r + L_r.T)/2 #example
 
 #eigendecomposition with decreasing eigenvalues
 def sorteigen(L):
@@ -92,5 +99,18 @@ for j in range(1,l): #this loop recursively finds all the nodes of L_cal after t
 
 L_cal=np.sort([K[j][0] for j in range(l)]) #the indices in K, K must have length l here
 
-import code
-code.interact(local=locals())
+print("L_cal = ", L_cal)
+
+for i in L_cal:
+    graph.set_label(i, labels[i])
+
+#for i in range(l):
+#    graph.set_label(i, labels[i])
+
+LP(graph)
+
+train_error = (graph.labels == labels).sum() / labels.size
+print("Training error using VOpt+LP = ", train_error)
+
+#import code
+#code.interact(local=locals())
