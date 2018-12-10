@@ -6,11 +6,15 @@ import numpy as np
 
 import mnist
 
+from graph import Graph
+
 def _download_data():
     if not os.path.isfile("mnist.pkl"):
         mnist.init()
 
-def _load_subset(digit1, digit2):
+def load_subset(digit1, digit2):
+    _download_data()
+
     x_train, y_train, x_test, y_test = mnist.load()
 
     train_subset = np.logical_or(y_train == digit1, y_train == digit2)
@@ -32,12 +36,20 @@ def _load_subset(digit1, digit2):
     return (x_train_subset, y_train_subset, x_test_subset, y_test_subset)
 
 def _generate_graph(x_train, x_test, sigma):
-    raise NotImplementedError
+    x = np.vstack((x_train, x_test))
+    n = x.shape[0]
+    graph = Graph(n)
+
+    for i in range(n):
+        for j in range(i + 1, n):
+            dij = np.linalg.norm(x[i, :] - x[j, :])
+            wij = np.exp(-dij**2 / sigma**2)
+            graph.set_weight(i, j, wij)
+
+    graph.compute_laplacian()
 
 def init(digit1, digit2, sigma):
-    _download_data()
-
-    x_train, y_train, x_test, y_test = _load_subset(digit1, digit2)
+    x_train, y_train, x_test, y_test = load_subset(digit1, digit2)
 
     num_train = y_train.shape[0]
     num_test = y_test.shape[0]
