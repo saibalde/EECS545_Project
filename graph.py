@@ -94,8 +94,8 @@ class Graph:
             Weight of the edge between the nodes
         """
         # retrive old weight
-        if i != j:
-            old_weight = self.weights[i, j]
+        #if i != j:
+        #    old_weight = self.weights[i, j]
 
         # assign new edge weight
         self.weights[i, j] = weight
@@ -103,11 +103,16 @@ class Graph:
             self.weights[j, i] = weight
 
         # update laplacian entries at (i, i), (i, j), (j, i) and (j, j)
-        if i != j:
-            self.laplacian[i, i] += weight - old_weight
-            self.laplacian[i, j] = -weight
-            self.laplacian[j, i] = -weight
-            self.laplacian[j, j] += weight - old_weight
+        #if i != j:
+        #    self.laplacian[i, i] += weight - old_weight
+        #    self.laplacian[i, j] = -weight
+        #    self.laplacian[j, i] = -weight
+        #    self.laplacian[j, j] += weight - old_weight
+
+    def compute_laplacian(self):
+        d = np.sum(self.weights, axis=1)
+        self.laplacian = -self.weights
+        self.laplacian[np.diag_indices(self.num_nodes)] += d
 
     def set_label(self, i, label):
         """Label the specified node of the graph
