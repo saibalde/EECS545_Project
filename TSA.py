@@ -1,9 +1,7 @@
-"""
-Author: David Dang
-Class: EECS545 Machine Learning
-Title: TSA Implementation
-Date: 11-06-2018
-"""
+#Author: David Dang
+#Class: EECS545 Machine Learning
+#Title: TSA Implementation
+#Date: 11-06-2018
 
 import numpy as np
 from util import subarray
@@ -40,14 +38,25 @@ class TSA:
     -- y_ell are labels for ell; y_ell[i] corresponds to index ell[i]
     -- toggle is true if computing marginals in Eq. (7); false otherwise
     '''
-    def calc_marginals(self, ell, y_ell, u, toggle):
+    def calc_marginals(self, y_ell, toggle, idx_2_remove=-1, u_excluding_q=-1, ell_with_q=-1):
         #trick; this is also the var G in Appendix A.3
         # self.L_uu_inv = np.linalg.inv(L_uu) 
-        laplacian_uu_inv_kk = self.graph.laplacian_uu_inv.diagonal()
+
+        laplacian_uu_inv_kk = self.graph.LuuInv.diagonal()
         laplacian_uu_inv_kk = laplacian_uu_inv_kk.reshape([len(laplacian_uu_inv_kk),1])
-        
-        f = np.multiply(-2.0/laplacian_uu_inv_kk, \
-                             np.matmul(np.matmul(self.graph.laplacian_uu_inv,self.graph.laplacian_ul),y_ell)) 
+
+        if toggle:
+            f = np.multiply(-2.0/laplacian_uu_inv_kk, \
+                 np.matmul(np.matmul(self.graph.LuuInv,self.graph.laplacian_ul()),y_ell)) 
+        else:
+            laplacian_uu_inv_kk = np.delete(laplacian_uu_inv_kk,idx_2_remove,0)
+            laplacian_uu_inv = np.delete(laplacian_uu_inv,idx_2_remove,0)
+            laplacian_uu_inv = np.delete(laplacian_uu_inv,idx_2_remove,1)
+            laplacian_ul = subarray(self.laplacian,u_excluding_q,ell_with_q)
+
+            f = np.multiply(-2.0/laplacian_uu_inv_kk, \
+                 np.matmul(np.matmul(laplacian_uu_inv,laplacian_ul),y_ell))      
+
         if toggle:
             self.f = f
             
@@ -96,7 +105,7 @@ class TSA:
         zero_one_risk = np.zeros(2)
         
         #remove q from u and store in u_excluding_q
-        u_excluding_q = np.setdiff1d(self.graph.u,q) 
+        idx_2_remove = graph.u.index(q) 
         
         '''
         Compute marginals in Eq. 6; note that it is computed for the entire
@@ -105,7 +114,7 @@ class TSA:
         identical except for the first element which is 1 & -1 in the 1st&2nd 
         columns, respectively
         '''
-        marginals = self.calc_marginals(ell_q,y_ell_q,u_excluding_q,False) 
+        marginals = self.calc_marginals(y_ell_q,False,idx_2_remove) 
 
         #note that zero_one_risk is going to be a 1x2 array
         #the first column corresponds to Y_q = [1,y_ell] and the second to
@@ -140,20 +149,17 @@ class TSA:
         y_ell_q[:,1] = np.append(self.y_ell,-1)
         
         #computes marginals for all q \in u. This is the marginal in Eq.(7)
-        self.marginals = self.calc_marginals(self.graph.l,self.y_ell,self.graph.u,True)  #marginals in Eq. (7)
+        self.marginals = self.calc_marginals(self.y_ell,True)  #marginals in Eq. (7)
         
         for i in range(0,len(self.graph.u)):
             q = self.graph.u[i]        #var for storing queried node idx
             
             ell_q = np.append(self.graph.l,q)   #ell with addition of q
-            y_ell_q = np.zeros((ell_q.size,2))     #var for storing labels for ell & q
+            # y_ell_q = np.zeros((ell_q.size,2))     #var for storing labels for ell & q
 
             #compute zero-one risk
             zero_one_risk = self.calc_zero_one_risk(q,y_ell_q,ell_q)
         
-            #note this computes marginals for all of u
-            #how do i write an optional arg for the below?
-
             #Compute lookahead_risk for all of q \in u
             #look_ahead risk should be a (u.size,) size 1-D array
             
