@@ -2,28 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
-from graph import Graph
-
-def subarray(array, row_indices, col_indices):
-    """Create a subarray with given row and column indices
-
-    Parameters
-    ----------
-    array: numpy.ndarray
-        Two dimensional NumPy array
-    row_indices: set
-        Set of row indices to select
-    col_indices: set
-        Set of column indices to select
-
-    Returns
-    -------
-    numpy.ndarray
-        Two dimensional array constructed using selected rows and columns
-    """
-    rows = [i for i in row_indices for j in col_indices]
-    cols = [j for i in row_indices for j in col_indices]
-    return array[(rows, cols)].reshape(len(row_indices), len(col_indices))
+from graph import Graph, subarray
 
 def LP(graph):
     W = graph.weights

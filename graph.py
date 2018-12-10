@@ -11,6 +11,27 @@ This module defines a class for constructing a fully connected graphs.
 import numpy as np
 import bisect
 
+def subarray(array, row_indices, col_indices):
+    """Create a subarray with given row and column indices
+
+    Parameters
+    ----------
+    array: numpy.ndarray
+        Two dimensional NumPy array
+    row_indices: set
+        Set of row indices to select
+    col_indices: set
+        Set of column indices to select
+
+    Returns
+    -------
+    numpy.ndarray
+        Two dimensional array constructed using selected rows and columns
+    """
+    rows = [i for i in row_indices for j in col_indices]
+    cols = [j for i in row_indices for j in col_indices]
+    return array[(rows, cols)].reshape(len(row_indices), len(col_indices))
+
 """
 A class for encoding undirected, fully connected graphs
 """
@@ -111,6 +132,9 @@ class Graph:
 
         """
         return self.LuuInv
+
+    def laplacian_ul(self):
+        return subarray(self.laplacian, u, l)
 
     def predicted_labels(self):
         """Return predicted labels for the unlabelled nodes of the graph
