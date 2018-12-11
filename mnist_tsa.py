@@ -10,7 +10,7 @@ from lp import LP
 from TSA import query_with_TSA
 
 # Initialize Graph
-num_train = 100
+num_train = 1000
 num_test = 0
 sigma = 2.0e3
 graph, labels = initialize_graph(4, 9, num_train, num_test, sigma)

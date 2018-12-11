@@ -54,42 +54,27 @@ class TSA:
         #trick; this is also the var G in Appendix A.3
         # self.L_uu_inv = np.linalg.inv(L_uu) 
 
-        laplacian_uu_inv_kk = self.graph.LuuInv.diagonal()
-        laplacian_uu_inv_kk = laplacian_uu_inv_kk.reshape([len(laplacian_uu_inv_kk),1])
-
-
         if toggle:
+            laplacian_uu_inv_kk = self.graph.LuuInv.diagonal()
+            laplacian_uu_inv_kk = laplacian_uu_inv_kk.reshape([len(laplacian_uu_inv_kk),1])
+
             y_ell = np.reshape(y_ell,(len(y_ell),1))
             f = np.multiply(-2.0/laplacian_uu_inv_kk, \
                  np.matmul(np.matmul(self.graph.LuuInv,self.graph.laplacian_ul()),y_ell)) 
 
         else:
 
-            #the 3 lines below are deprecated and slow
-            # t0 = time.time()
-            laplacian_uu_inv_kk = np.delete(laplacian_uu_inv_kk,idx_2_remove,0)
-            # t1 = time.time()
-            # print('time -1')
-            # print(t1-t0)
+            #these are wrong because they take submatrices of LuuInv, which is not what we need!
+            # laplacian_uu_inv_kk = np.delete(laplacian_uu_inv_kk,idx_2_remove,0)     #THIS IS WRONG!
+            # laplacian_uu_inv = cut_row_col(self.graph.LuuInv,idx_2_remove) # THIS IS WRONG!
 
-            # t0 = time.time()
-            laplacian_uu_inv = cut_row_col(self.graph.LuuInv,idx_2_remove)
-            # laplacian_uu_inv = np.delete(self.graph.LuuInv,idx_2_remove,0)
-            # laplacian_uu_inv = np.delete(laplacian_uu_inv,idx_2_remove,1)
-            # t1 = time.time()
-            # print('time 1')
-            # print(t1-t0)
+            #instead we should have this
+            laplacian_uu = self.graph.laplacian[u_excluding_q,:][:,u_excluding_q]
+            laplacian_uu_inv = np.linalg.inv(laplacian_uu)
+            laplacian_uu_inv_kk = laplacian_uu_inv.diagonal()
+            laplacian_uu_inv_kk = laplacian_uu_inv_kk.reshape([len(laplacian_uu_inv_kk),1])
 
-
-            # t0 = time.time()
-
-            # laplacian_ul = subarray(self.graph.laplacian,u_excluding_q,ell_with_q)
             laplacian_ul = self.graph.laplacian[u_excluding_q,:][:,ell_with_q]
-            # t1 = time.time()
-            # print('time 2')
-            # print(t1-t0)
-
-            # t0 = time.time()
 
             f = np.multiply(-2.0/laplacian_uu_inv_kk, \
                  np.matmul(np.matmul(laplacian_uu_inv,laplacian_ul),y_ell))
@@ -111,26 +96,40 @@ class TSA:
     
     '''
     -- Function for computing f using the dongle trick; see last eqn of TSA paper
-    -- i here is
-    -- how do we know what y0 is?
+    -- i here is for the queried node?
     -- This function should be called instead of calc_marginals after the 1st
        query
     '''
-    def dongle_trick(self,i,y_0):
-        G_diag = self.graph.laplacian_uu_inv.diagonal()  
-        G_kk = G_diag                    #note G_kk is actually [G_kk]_k, a set
-        G_ki = self.graph.laplacian_uu_inv[self.graph.u,i]
-        G_ii = self.graph.laplacian_uu_inv[i,i]
+    def dongle_trick(self,i):
+        diag_idx = np.arange(self.graph.LuuInv.shape[0])
+        diag_idx_wo_i = np.delete(diag_idx,i)
+        G_kk = self.graph.LuuInv[diag_idx_wo_i,diag_idx_wo_i]   #note G_kk is actually [G_kk]_k, an array of the diagonal components of G
+        G_kk = G_kk.reshape([len(G_kk),1])
+        G_ki = self.graph.LuuInv[diag_idx_wo_i,i]
+        # G_ki = G_ki.reshape([len(G_ki),1])
+        G_ii = self.graph.LuuInv[i,i]
         #f_kk = self.f[self.u]
         f_i = self.f[i]
 
-        left_hadamard = 1/(G_kk - np.square(G_ki)/G_ii)
-        right_hadamard = np.multiply(0.5*G_diag,self.f) + \
-            (y_0/G_ii - f_i/2)*self.graph.laplacian_uu_inv[:,i]
+        #y0[i] corresponds to the y_0 in the dongle trick on appendix
+        #y0 is vectorized here and is size 2 (it can only take values in {1,-1})
+        y0 = np.zeros((2,1))
+        y0[0] = 1
+        y0[1] = -1
+
+
+        # print(G_kk[0][0])
+        # print((G_ki[0])^2)
+        # print(G_kk - np.square((G_ki).reshape([len(G_ki),1]))/G_ii)
+
+        left_hadamard = 1/(G_kk - np.square((G_ki).reshape([len(G_ki),1]))/G_ii)
+
+        right_hadamard = np.multiply(0.5*G_kk,self.f[diag_idx_wo_i]) + \
+            np.matrix.transpose(np.multiply((y0/G_ii - f_i/2),G_ki))
 
         #LHS is [f_k^{+i}]_{k \in \bar{u}} after observing Y_{\ell \union {i}}
-        self.f = 2*np.multply(left_hadamard,right_hadamard)
-        marginals = 1.0/(1+np.exp(-self.f))
+        f = 2*np.multiply(left_hadamard,right_hadamard)
+        marginals = 1.0/(1+np.exp(f))
 
         return marginals
     
@@ -143,11 +142,12 @@ class TSA:
     -- y_ell_with_q is the labels for ell and q
     -- ell_with_q is the set of indices for ell and q
     '''
-    def calc_zero_one_risk(self,q,y_ell_with_q,ell_with_q,u_excluding_q):
+    # def calc_zero_one_risk(self,q,y_ell_with_q,ell_with_q,u_excluding_q):
+    def calc_zero_one_risk(self,i):
         zero_one_risk = np.zeros(2)
         
         #remove q from u and store in u_excluding_q
-        idx_2_remove = self.graph.u.index(q) 
+        # idx_2_remove = self.graph.u.index(q) 
 
 
         '''
@@ -157,7 +157,9 @@ class TSA:
         identical except for the first element which is 1 & -1 in the 1st&2nd 
         columns, respectively
         '''
-        marginals = self.calc_marginals(y_ell_with_q, False, idx_2_remove, u_excluding_q, ell_with_q)
+        # marginals = self.calc_marginals(y_ell_with_q, False, idx_2_remove, u_excluding_q, ell_with_q)
+        marginals = self.dongle_trick(i)
+        # print(marginals.shape)
 
         #note that zero_one_risk is going to be a 1x2 array
         #the first column corresponds to Y_q = [1,y_ell] and the second to
@@ -202,22 +204,18 @@ class TSA:
 
         self.marginals = self.calc_marginals(self.y_ell,True)  #marginals in Eq. (7)
 
-
         for i in range(0,len(self.graph.u)):
-
-            # t0 = time.time()
-            q = self.graph.u[i]        #var for storing queried node idx
-            
-            ell_with_q = np.append(self.graph.l,q)   #ell with addition of q
-            # y_ell_with_q = np.zeros((ell_with_q.size,2))     #var for storing labels for ell & q
+            # q = self.graph.u[i]        #var for storing queried node idx
+            # ell_with_q = np.append(self.graph.l,q)   #ell with addition of q
 
 
-            u_excluding_q = self.graph.u[0:i]
-            u_excluding_q += self.graph.u[i+1:len(self.graph.u)]
+            # u_excluding_q = self.graph.u[0:i]
+            # u_excluding_q += self.graph.u[i+1:len(self.graph.u)]
 
             # t0 = time.time()
 
-            zero_one_risk = self.calc_zero_one_risk(q,y_ell_with_q,ell_with_q,u_excluding_q)
+            # zero_one_risk = self.calc_zero_one_risk(q,y_ell_with_q,ell_with_q,u_excluding_q)
+            zero_one_risk = self.calc_zero_one_risk(i)
             # t1 = time.time()
             # print(t1-t0)
             #Compute lookahead_risk for all of q \in u
