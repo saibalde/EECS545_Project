@@ -10,7 +10,7 @@ from lp import LP
 from TSA import query_with_TSA
 
 # Initialize Graph
-num_train = 1000
+num_train = 100
 num_test = 0
 sigma = 2.0e3
 graph, labels = initialize_graph(4, 9, num_train, num_test, sigma)
@@ -36,6 +36,8 @@ for i in range(num_max_labels):
     queried_index = query_with_TSA(graph)
     t1 = time.time()
     print('TSA comp. time for iteration',i, 'is:',t1-t0)
+
+    print(queried_index)
 
     # query the oracle
     label = labels[queried_index]

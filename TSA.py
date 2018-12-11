@@ -66,38 +66,38 @@ class TSA:
         else:
 
             #the 3 lines below are deprecated and slow
-            t0 = time.time()
+            # t0 = time.time()
             laplacian_uu_inv_kk = np.delete(laplacian_uu_inv_kk,idx_2_remove,0)
-            t1 = time.time()
-            print('time -1')
-            print(t1-t0)
+            # t1 = time.time()
+            # print('time -1')
+            # print(t1-t0)
 
-            t0 = time.time()
+            # t0 = time.time()
             laplacian_uu_inv = cut_row_col(self.graph.LuuInv,idx_2_remove)
             # laplacian_uu_inv = np.delete(self.graph.LuuInv,idx_2_remove,0)
             # laplacian_uu_inv = np.delete(laplacian_uu_inv,idx_2_remove,1)
-            t1 = time.time()
-            print('time 1')
-            print(t1-t0)
+            # t1 = time.time()
+            # print('time 1')
+            # print(t1-t0)
 
 
-            t0 = time.time()
+            # t0 = time.time()
 
             # laplacian_ul = subarray(self.graph.laplacian,u_excluding_q,ell_with_q)
             laplacian_ul = self.graph.laplacian[u_excluding_q,:][:,ell_with_q]
-            t1 = time.time()
-            print('time 2')
-            print(t1-t0)
+            # t1 = time.time()
+            # print('time 2')
+            # print(t1-t0)
 
-            t0 = time.time()
+            # t0 = time.time()
 
             f = np.multiply(-2.0/laplacian_uu_inv_kk, \
                  np.matmul(np.matmul(laplacian_uu_inv,laplacian_ul),y_ell))
                   
-            t1 = time.time()
-            print('time 4')
-            print(t1-t0)
-            print(' ')
+            # t1 = time.time()
+            # print('time 4')
+            # print(t1-t0)
+            # print(' ')
 
         if toggle:
             self.f = f
