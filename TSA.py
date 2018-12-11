@@ -135,17 +135,21 @@ class TSA:
         #Y_q = [-1,y_ell]
         #print(marginals.shape)
         # t0 = time.time()
-        num_rows, num_cols = marginals.shape
-        for i in range(0,num_rows):
-            if marginals[i,0] >= 0.5:
-                zero_one_risk[0] += 1 - marginals[i,0]
-            else:
-                zero_one_risk[0] += marginals[i,0]                
-            if marginals[i,1] >= 0.5:
-                zero_one_risk[1] += 1 - marginals[i,1]
-            else:
-                zero_one_risk[1] += marginals[i,1]        
-            
+        # num_rows, num_cols = marginals.shape
+        # for i in range(0,num_rows):
+        #     if marginals[i,0] >= 0.5:
+        #         zero_one_risk[0] += 1 - marginals[i,0]
+        #     else:
+        #         zero_one_risk[0] += marginals[i,0]                
+        #     if marginals[i,1] >= 0.5:
+        #         zero_one_risk[1] += 1 - marginals[i,1]
+        #     else:
+        #         zero_one_risk[1] += marginals[i,1]        
+        
+        #these 2 lines vectorize the above for loop
+        zero_one_risk[0] = np.sum(np.minimum(marginals[:,0], 1-marginals[:,0]))
+        zero_one_risk[1] = np.sum(np.minimum(marginals[:,1], 1-marginals[:,1]))
+
         # t1 = time.time()
         # print(t1-t0)    
         zero_one_risk *= 1.0/self.graph.num_nodes
