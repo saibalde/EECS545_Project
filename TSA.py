@@ -4,7 +4,7 @@
 #Date: 11-06-2018
 
 import numpy as np
-from util import subarray
+from graph import subarray
 
 
 def query_with_TSA(graph):
@@ -45,23 +45,30 @@ class TSA:
         laplacian_uu_inv_kk = self.graph.LuuInv.diagonal()
         laplacian_uu_inv_kk = laplacian_uu_inv_kk.reshape([len(laplacian_uu_inv_kk),1])
 
+
         if toggle:
+            y_ell = np.reshape(y_ell,(len(y_ell),1))
             f = np.multiply(-2.0/laplacian_uu_inv_kk, \
                  np.matmul(np.matmul(self.graph.LuuInv,self.graph.laplacian_ul()),y_ell)) 
         else:
             laplacian_uu_inv_kk = np.delete(laplacian_uu_inv_kk,idx_2_remove,0)
-            laplacian_uu_inv = np.delete(laplacian_uu_inv,idx_2_remove,0)
+            laplacian_uu_inv = np.delete(self.graph.LuuInv,idx_2_remove,0)
             laplacian_uu_inv = np.delete(laplacian_uu_inv,idx_2_remove,1)
-            laplacian_ul = subarray(self.laplacian,u_excluding_q,ell_with_q)
+
+            # print(type(u_excluding_q[0]))
+            # print(type(ell_with_q[0]))
+
+            laplacian_ul = subarray(self.graph.laplacian,u_excluding_q,ell_with_q)
 
             f = np.multiply(-2.0/laplacian_uu_inv_kk, \
                  np.matmul(np.matmul(laplacian_uu_inv,laplacian_ul),y_ell))      
+
 
         if toggle:
             self.f = f
             
         marginals = 1.0/(1+np.exp(f))
-        
+
         return marginals
     
     
@@ -101,12 +108,13 @@ class TSA:
     -- y_ell_q is the labels for ell and q
     -- ell_q is the set of indices for ell and q
     '''
-    def calc_zero_one_risk(self,q,y_ell_q,ell_q):
+    def calc_zero_one_risk(self,q,y_ell_q,ell_q,u_excluding_q):
         zero_one_risk = np.zeros(2)
         
         #remove q from u and store in u_excluding_q
-        idx_2_remove = graph.u.index(q) 
-        
+        idx_2_remove = self.graph.u.index(q) 
+
+
         '''
         Compute marginals in Eq. 6; note that it is computed for the entire
         set u_excluding_q simultaneously; also note this will output a 2 column 
@@ -114,7 +122,7 @@ class TSA:
         identical except for the first element which is 1 & -1 in the 1st&2nd 
         columns, respectively
         '''
-        marginals = self.calc_marginals(y_ell_q,False,idx_2_remove) 
+        marginals = self.calc_marginals(y_ell_q, False, idx_2_remove, u_excluding_q, ell_q)
 
         #note that zero_one_risk is going to be a 1x2 array
         #the first column corresponds to Y_q = [1,y_ell] and the second to
@@ -150,15 +158,17 @@ class TSA:
         
         #computes marginals for all q \in u. This is the marginal in Eq.(7)
         self.marginals = self.calc_marginals(self.y_ell,True)  #marginals in Eq. (7)
-        
+
         for i in range(0,len(self.graph.u)):
             q = self.graph.u[i]        #var for storing queried node idx
             
             ell_q = np.append(self.graph.l,q)   #ell with addition of q
             # y_ell_q = np.zeros((ell_q.size,2))     #var for storing labels for ell & q
 
-            #compute zero-one risk
-            zero_one_risk = self.calc_zero_one_risk(q,y_ell_q,ell_q)
+            u_excluding_q = self.graph.u[0:i]
+            u_excluding_q += self.graph.u[i+1:len(self.graph.u)]
+
+            zero_one_risk = self.calc_zero_one_risk(q,y_ell_q,ell_q,u_excluding_q)
         
             #Compute lookahead_risk for all of q \in u
             #look_ahead risk should be a (u.size,) size 1-D array

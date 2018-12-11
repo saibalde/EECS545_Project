@@ -28,8 +28,14 @@ def subarray(array, row_indices, col_indices):
     numpy.ndarray
         Two dimensional array constructed using selected rows and columns
     """
+
+    # print(type(row_indices[0]))
+    # print(type(col_indices[0]))
+
     rows = [i for i in row_indices for j in col_indices]
     cols = [j for i in row_indices for j in col_indices]
+
+
     return array[(rows, cols)].reshape(len(row_indices), len(col_indices))
 
 """
