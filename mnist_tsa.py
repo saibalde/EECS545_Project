@@ -25,7 +25,7 @@ LP(graph)
 accuracy = (graph.labels == labels).sum() / labels.size
 print(len(graph.l), ' ', accuracy)
 
-print(graph.laplacian.shape)
+print(len(graph.u))
 
 # Run the TSA algorithm
 num_max_labels = 75
@@ -35,7 +35,7 @@ for i in range(num_max_labels):
     t0 = time.time()
     queried_index = query_with_TSA(graph)
     t1 = time.time()
-    print(t1-t0)
+    print('TSA comp. time for iteration',i, 'is:',t1-t0)
 
     # query the oracle
     label = labels[queried_index]
@@ -44,7 +44,11 @@ for i in range(num_max_labels):
     graph.set_label(queried_index, label)
 
     # predict labels
+
+    t0 = time.time()    
     LP(graph)
+    t1 = time.time()
+    print('LP comp. time for iteration',i, 'is:',t1-t0)
 
     # compute training error and stop if done
     accuracy = (graph.labels == labels).sum() / labels.size

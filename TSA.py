@@ -5,11 +5,12 @@
 
 import numpy as np
 from graph import subarray
-
+import time
 
 def query_with_TSA(graph):
    TSA_instance = TSA(graph)
    TSA_instance.calc_lookahead_risk()
+
    q = TSA_instance.solve_eem()
 
    return q;
@@ -47,22 +48,27 @@ class TSA:
 
 
         if toggle:
+
             y_ell = np.reshape(y_ell,(len(y_ell),1))
             f = np.multiply(-2.0/laplacian_uu_inv_kk, \
                  np.matmul(np.matmul(self.graph.LuuInv,self.graph.laplacian_ul()),y_ell)) 
+
         else:
+
+            #the 3 lines below are deprecated and slow
+            # t0 = time.time()
             laplacian_uu_inv_kk = np.delete(laplacian_uu_inv_kk,idx_2_remove,0)
             laplacian_uu_inv = np.delete(self.graph.LuuInv,idx_2_remove,0)
             laplacian_uu_inv = np.delete(laplacian_uu_inv,idx_2_remove,1)
 
-            # print(type(u_excluding_q[0]))
-            # print(type(ell_with_q[0]))
-
-            laplacian_ul = subarray(self.graph.laplacian,u_excluding_q,ell_with_q)
+            # laplacian_ul = subarray(self.graph.laplacian,u_excluding_q,ell_with_q)
+            laplacian_ul = self.graph.laplacian[u_excluding_q,:][:,ell_with_q]
+                  
+            # t1 = time.time()
+            # print(t1-t0)
 
             f = np.multiply(-2.0/laplacian_uu_inv_kk, \
-                 np.matmul(np.matmul(laplacian_uu_inv,laplacian_ul),y_ell))      
-
+                 np.matmul(np.matmul(laplacian_uu_inv,laplacian_ul),y_ell))
 
         if toggle:
             self.f = f
@@ -105,10 +111,10 @@ class TSA:
     -- Eq. (6) from TSA paper
     -- Function for compute zero-one risk
     -- q is the index of the queried node
-    -- y_ell_q is the labels for ell and q
-    -- ell_q is the set of indices for ell and q
+    -- y_ell_with_q is the labels for ell and q
+    -- ell_with_q is the set of indices for ell and q
     '''
-    def calc_zero_one_risk(self,q,y_ell_q,ell_q,u_excluding_q):
+    def calc_zero_one_risk(self,q,y_ell_with_q,ell_with_q,u_excluding_q):
         zero_one_risk = np.zeros(2)
         
         #remove q from u and store in u_excluding_q
@@ -122,12 +128,13 @@ class TSA:
         identical except for the first element which is 1 & -1 in the 1st&2nd 
         columns, respectively
         '''
-        marginals = self.calc_marginals(y_ell_q, False, idx_2_remove, u_excluding_q, ell_q)
+        marginals = self.calc_marginals(y_ell_with_q, False, idx_2_remove, u_excluding_q, ell_with_q)
 
         #note that zero_one_risk is going to be a 1x2 array
         #the first column corresponds to Y_q = [1,y_ell] and the second to
         #Y_q = [-1,y_ell]
         #print(marginals.shape)
+        t0 = time.time()
         num_rows, num_cols = marginals.shape
         for i in range(0,num_rows):
             if marginals[i,0] >= 0.5:
@@ -139,6 +146,8 @@ class TSA:
             else:
                 zero_one_risk[1] += 1 - (1 - marginals[i,1])        
             
+        t1 = time.time()
+        print(t1-t0)    
         zero_one_risk *= 1.0/self.graph.num_nodes
         
         return zero_one_risk 
@@ -152,24 +161,32 @@ class TSA:
     -- q is the queried node's index
     '''
     def calc_lookahead_risk(self):
-        y_ell_q = np.zeros([len(self.y_ell)+1,2])
-        y_ell_q[:,0] = np.append(self.y_ell,1)
-        y_ell_q[:,1] = np.append(self.y_ell,-1)
-        
+        y_ell_with_q = np.zeros([len(self.y_ell)+1,2])
+        y_ell_with_q[:,0] = np.append(self.y_ell,1)
+        y_ell_with_q[:,1] = np.append(self.y_ell,-1)
+
         #computes marginals for all q \in u. This is the marginal in Eq.(7)
+
         self.marginals = self.calc_marginals(self.y_ell,True)  #marginals in Eq. (7)
 
+
         for i in range(0,len(self.graph.u)):
+
+            # t0 = time.time()
             q = self.graph.u[i]        #var for storing queried node idx
             
-            ell_q = np.append(self.graph.l,q)   #ell with addition of q
-            # y_ell_q = np.zeros((ell_q.size,2))     #var for storing labels for ell & q
+            ell_with_q = np.append(self.graph.l,q)   #ell with addition of q
+            # y_ell_with_q = np.zeros((ell_with_q.size,2))     #var for storing labels for ell & q
+
 
             u_excluding_q = self.graph.u[0:i]
             u_excluding_q += self.graph.u[i+1:len(self.graph.u)]
 
-            zero_one_risk = self.calc_zero_one_risk(q,y_ell_q,ell_q,u_excluding_q)
-        
+            # t0 = time.time()
+
+            zero_one_risk = self.calc_zero_one_risk(q,y_ell_with_q,ell_with_q,u_excluding_q)
+            # t1 = time.time()
+            # print(t1-t0)
             #Compute lookahead_risk for all of q \in u
             #look_ahead risk should be a (u.size,) size 1-D array
             
@@ -177,6 +194,8 @@ class TSA:
                 zero_one_risk[1] * (1 - self.marginals[i])
         
         
+            # t1 = time.time()
+            # print(t1-t0)
         
     '''
     -- Eq.(5) from TSA paper
