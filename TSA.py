@@ -15,6 +15,17 @@ def query_with_TSA(graph):
 
    return q;
 
+#function for removing i-th row and column from arr (NxN); returns matrix that is
+# (N-1)x(N-1)
+def cut_row_col(arr,i):
+    N = arr.shape[0]
+    mat_cut = np.empty((N-1,N-1), arr.dtype)
+    mat_cut[:i, :i] = arr[:i, :i]        #upper left block
+    mat_cut[:i, i:] = arr[:i, i+1:]      #upper right block
+    mat_cut[i:, :i] = arr[i+1:, :i]      #lower left block
+    mat_cut[i:, i:] = arr[i+1:, i+1:]    #lower right block
+    return mat_cut   
+
 """
 Class for Two-Step Approximation (The Query Step)
 """
@@ -48,7 +59,6 @@ class TSA:
 
 
         if toggle:
-
             y_ell = np.reshape(y_ell,(len(y_ell),1))
             f = np.multiply(-2.0/laplacian_uu_inv_kk, \
                  np.matmul(np.matmul(self.graph.LuuInv,self.graph.laplacian_ul()),y_ell)) 
@@ -56,19 +66,38 @@ class TSA:
         else:
 
             #the 3 lines below are deprecated and slow
-            # t0 = time.time()
+            t0 = time.time()
             laplacian_uu_inv_kk = np.delete(laplacian_uu_inv_kk,idx_2_remove,0)
-            laplacian_uu_inv = np.delete(self.graph.LuuInv,idx_2_remove,0)
-            laplacian_uu_inv = np.delete(laplacian_uu_inv,idx_2_remove,1)
+            t1 = time.time()
+            print('time -1')
+            print(t1-t0)
+
+            t0 = time.time()
+            laplacian_uu_inv = cut_row_col(self.graph.LuuInv,idx_2_remove)
+            # laplacian_uu_inv = np.delete(self.graph.LuuInv,idx_2_remove,0)
+            # laplacian_uu_inv = np.delete(laplacian_uu_inv,idx_2_remove,1)
+            t1 = time.time()
+            print('time 1')
+            print(t1-t0)
+
+
+            t0 = time.time()
 
             # laplacian_ul = subarray(self.graph.laplacian,u_excluding_q,ell_with_q)
             laplacian_ul = self.graph.laplacian[u_excluding_q,:][:,ell_with_q]
-                  
-            # t1 = time.time()
-            # print(t1-t0)
+            t1 = time.time()
+            print('time 2')
+            print(t1-t0)
+
+            t0 = time.time()
 
             f = np.multiply(-2.0/laplacian_uu_inv_kk, \
                  np.matmul(np.matmul(laplacian_uu_inv,laplacian_ul),y_ell))
+                  
+            t1 = time.time()
+            print('time 4')
+            print(t1-t0)
+            print(' ')
 
         if toggle:
             self.f = f
@@ -132,8 +161,8 @@ class TSA:
 
         #note that zero_one_risk is going to be a 1x2 array
         #the first column corresponds to Y_q = [1,y_ell] and the second to
-        #Y_q = [-1,y_ell]
-        #print(marginals.shape)
+        # Y_q = [-1,y_ell]
+        # print(marginals.shape)
         # t0 = time.time()
         # num_rows, num_cols = marginals.shape
         # for i in range(0,num_rows):
