@@ -3,6 +3,7 @@
 
 import os.path
 import numpy as np
+import time
 
 import mnist
 
@@ -62,6 +63,7 @@ def _generate_graph(x_train, x_test, sigma):
         for j in range(i + 1, n):
             dij = np.linalg.norm(x[i, :] - x[j, :])
             wij = np.exp(-dij**2 / sigma**2)
+
             graph.set_weight(i, j, wij)
 
     graph.compute_laplacian()

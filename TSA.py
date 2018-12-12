@@ -30,7 +30,6 @@ def cut_row_col(arr,i):
 Class for Two-Step Approximation (The Query Step)
 """
 class TSA:
-    # def __init__(self, ell, u, y_ell, graph):
     def __init__(self, graph):
         #does this require operator= ?
         self.graph = graph          #may change later from composition to inheritance
@@ -41,7 +40,6 @@ class TSA:
         self.marginals = np.zeros(len_u)
         
         
-    
     '''
     -- Eq. (10) from TSA; variables here named accordingly
     -- Function for computing f_k, the decision value of node k s.t. k \in u
@@ -63,35 +61,23 @@ class TSA:
                  np.matmul(np.matmul(self.graph.LuuInv,self.graph.laplacian_ul()),y_ell)) 
 
         else:
-
-            #these are wrong because they take submatrices of LuuInv, which is not what we need!
-            # laplacian_uu_inv_kk = np.delete(laplacian_uu_inv_kk,idx_2_remove,0)     #THIS IS WRONG!
-            # laplacian_uu_inv = cut_row_col(self.graph.LuuInv,idx_2_remove) # THIS IS WRONG!
-
-            #instead we should have this
+            # print('this should never be executed)
+            # exit()
             laplacian_uu = self.graph.laplacian[u_excluding_q,:][:,u_excluding_q]
             laplacian_uu_inv = np.linalg.inv(laplacian_uu)
             laplacian_uu_inv_kk = laplacian_uu_inv.diagonal()
             laplacian_uu_inv_kk = laplacian_uu_inv_kk.reshape([len(laplacian_uu_inv_kk),1])
-
             laplacian_ul = self.graph.laplacian[u_excluding_q,:][:,ell_with_q]
 
             f = np.multiply(-2.0/laplacian_uu_inv_kk, \
                  np.matmul(np.matmul(laplacian_uu_inv,laplacian_ul),y_ell))
                   
-            # t1 = time.time()
-            # print('time 4')
-            # print(t1-t0)
-            # print(' ')
-
         if toggle:
             self.f = f
             
         marginals = 1.0/(1+np.exp(f))
 
         return marginals
-    
-    
     
     
     '''
@@ -101,38 +87,37 @@ class TSA:
        query
     '''
     def dongle_trick(self,i):
+        t0 = time.time()
         diag_idx = np.arange(self.graph.LuuInv.shape[0])
         diag_idx_wo_i = np.delete(diag_idx,i)
-        G_kk = self.graph.LuuInv[diag_idx_wo_i,diag_idx_wo_i]   #note G_kk is actually [G_kk]_k, an array of the diagonal components of G
+        G_kk = self.graph.LuuInv.diagonal()
+        G_kk = np.delete(G_kk,i)
         G_kk = G_kk.reshape([len(G_kk),1])
-        G_ki = self.graph.LuuInv[diag_idx_wo_i,i]
+        G_ki = self.graph.LuuInv[:,i]
+        G_ki = np.delete(G_ki,i,0)
+        # G_ki = self.graph.LuuInv[diag_idx_wo_i,i]
         # G_ki = G_ki.reshape([len(G_ki),1])
         G_ii = self.graph.LuuInv[i,i]
         #f_kk = self.f[self.u]
         f_i = self.f[i]
 
         #y0[i] corresponds to the y_0 in the dongle trick on appendix
-        #y0 is vectorized here and is size 2 (it can only take values in {1,-1})
         y0 = np.zeros((2,1))
         y0[0] = 1
         y0[1] = -1
 
+        #The term in big [] in App. A.3
+        left_hadamard = 1/(G_kk - np.square((G_ki).reshape([len(G_ki),1]))/G_ii)  
 
-        # print(G_kk[0][0])
-        # print((G_ki[0])^2)
-        # print(G_kk - np.square((G_ki).reshape([len(G_ki),1]))/G_ii)
-
-        left_hadamard = 1/(G_kk - np.square((G_ki).reshape([len(G_ki),1]))/G_ii)
-
+        #The term in big () in App. A.3
         right_hadamard = np.multiply(0.5*G_kk,self.f[diag_idx_wo_i]) + \
             np.matrix.transpose(np.multiply((y0/G_ii - f_i/2),G_ki))
 
-        #LHS is [f_k^{+i}]_{k \in \bar{u}} after observing Y_{\ell \union {i}}
+        #LHS is [f_k^{+i}]_{k \in \bar{u}} after observing Y_{\ell \union \{i\}}
         f = 2*np.multiply(left_hadamard,right_hadamard)
         marginals = 1.0/(1+np.exp(f))
 
         return marginals
-    
     
     
     '''    
@@ -146,10 +131,6 @@ class TSA:
     def calc_zero_one_risk(self,i):
         zero_one_risk = np.zeros(2)
         
-        #remove q from u and store in u_excluding_q
-        # idx_2_remove = self.graph.u.index(q) 
-
-
         '''
         Compute marginals in Eq. 6; note that it is computed for the entire
         set u_excluding_q simultaneously; also note this will output a 2 column 
@@ -188,7 +169,6 @@ class TSA:
         return zero_one_risk 
         
     
-    
     '''
     -- Eq. (7) from TSA paper    
     -- Compute lookahead zero-one risk
@@ -200,33 +180,17 @@ class TSA:
         y_ell_with_q[:,0] = np.append(self.y_ell,1)
         y_ell_with_q[:,1] = np.append(self.y_ell,-1)
 
-        #computes marginals for all q \in u. This is the marginal in Eq.(7)
-
+        #computes marginals for all q \in u. This is the marginal prob. in Eq.(7)
         self.marginals = self.calc_marginals(self.y_ell,True)  #marginals in Eq. (7)
 
         for i in range(0,len(self.graph.u)):
-            # q = self.graph.u[i]        #var for storing queried node idx
-            # ell_with_q = np.append(self.graph.l,q)   #ell with addition of q
-
-
-            # u_excluding_q = self.graph.u[0:i]
-            # u_excluding_q += self.graph.u[i+1:len(self.graph.u)]
-
-            # t0 = time.time()
-
-            # zero_one_risk = self.calc_zero_one_risk(q,y_ell_with_q,ell_with_q,u_excluding_q)
             zero_one_risk = self.calc_zero_one_risk(i)
-            # t1 = time.time()
-            # print(t1-t0)
+
             #Compute lookahead_risk for all of q \in u
-            #look_ahead risk should be a (u.size,) size 1-D array
-            
+            #look_ahead risk should be a (u.size,) size 1-D array            
             self.lookahead_risk[i] = zero_one_risk[0] * self.marginals[i] + \
                 zero_one_risk[1] * (1 - self.marginals[i])
-        
-        
-            # t1 = time.time()
-            # print(t1-t0)
+
         
     '''
     -- Eq.(5) from TSA paper
@@ -236,38 +200,10 @@ class TSA:
         idx = np.argmin(self.lookahead_risk)
         q = self.graph.u[idx]
         
-        # if self.marginals[idx]>=0.5:
-        #     y_q = 1
-        # else:
-        #     y_q = -1
+        return q
         
-        return q#, y_q
-        
-    
-    
-    #def set_idx:
-    
     
     def set_y_ell(self,y_ell):
         assert type(y_ell) == np.ndarray
 
         self.y_ell = y_ell        
-
-
-# TSAobj = TSA(Z,beta,numSamples)
-# TSAobj.calcLaplacian(numSamples,weights)
-# TSAobj.calcProbability(labels)
-
-"""
-ell_1 is initial labeled nodes. 
-
-Suppose we have observed the labels of nodes \ell as y_{\ell}. 
-TSAA to poterior marignal distribution P_{Y_{\ell}}(Y_k) -> query algorithm
-\mu is two-step upperbound on P(Y_k=y_k, Y_\ell = y_\ell)
-
-
-ell: labeled nodes
-u_bar: unlabeled nodes except k (u\{k})
-u: set of unlabeled nodes
-k: unlabeled node excluded from u_bar
-"""
