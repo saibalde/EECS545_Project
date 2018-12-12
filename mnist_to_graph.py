@@ -15,6 +15,7 @@ def _download_data():
 
 def load_subset(digit1, digit2, num_train, num_test):
     _download_data()
+    np.random.seed(0)
 
     x_train, y_train, x_test, y_test = mnist.load()
 
