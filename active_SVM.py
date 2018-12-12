@@ -18,29 +18,32 @@ x,y,xtest,ytest = load_subset(4,9,num_train, num_test)
 ######Finished intialize of data, but training time is too long 
 '''
 
-import mnist
+#import mnist
 #mnist.init()
-x_train, t_train, x_test, t_test = mnist.load()
+#x_train, t_train, x_test, t_test = mnist.load()
 
-indices1 = [i for i, j in enumerate(t_train) if ((j==4)or(j==9)) ]
-indices2 = [i for i, j in enumerate(t_test) if ((j==4)or(j==9)) ]
-x = x_train[indices1,:]
-y = t_train[indices1]
-y = np.cast[int](y)
-y[y==4]=-1
-y[y==9]= 1
-ind1 = np.random.choice(np.arange(y.size), 1000)
-x = x[ind1,:]
-y = y[ind1]
+#indices1 = [i for i, j in enumerate(t_train) if ((j==4)or(j==9)) ]
+#indices2 = [i for i, j in enumerate(t_test) if ((j==4)or(j==9)) ]
+#x = x_train[indices1,:]
+#y = t_train[indices1]
+#y = np.cast[int](y)
+#y[y==4]=-1
+#y[y==9]= 1
+#ind1 = np.random.choice(np.arange(y.size), 1000)
+#x = x[ind1,:]
+#y = y[ind1]
+#
+#xtest = x_test[indices2,:]
+#ytest = t_test[indices2]
+#ytest = np.cast[int](ytest)
+#ytest[ytest==4]=-1
+#ytest[ytest==9]=1
+#ind2 = np.random.choice(np.arange(ytest.size),500)
+#xtest = xtest[ind2,:]
+#ytest = ytest[ind2]
 
-xtest = x_test[indices2,:]
-ytest = t_test[indices2]
-ytest = np.cast[int](ytest)
-ytest[ytest==4]=-1
-ytest[ytest==9]=1
-ind2 = np.random.choice(np.arange(ytest.size),500)
-xtest = xtest[ind2,:]
-ytest = ytest[ind2]
+import mnist_subset
+x, y, xtest, ytest = mnist_subset.init()
 
 '''
 #### Useing data from class here
