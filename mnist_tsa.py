@@ -15,7 +15,7 @@ np.random.seed(0)
 # Initialize Graph
 num_train = 1000
 num_test = 0
-sigma = 2.0e3
+sigma = 1.0
 graph, labels = initialize_graph(0, 1, num_train, num_test, sigma)
 
 # Randomly initialize some labels

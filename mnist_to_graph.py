@@ -59,6 +59,9 @@ def _generate_graph(x_train, x_test, sigma):
     n = x.shape[0]
     graph = Graph(n)
 
+    x_norm = np.linalg.norm(x, axis=1)
+    x = x / x_norm[:, np.newaxis]
+
     for i in range(n):
         for j in range(i + 1, n):
             dij = np.linalg.norm(x[i, :] - x[j, :])
