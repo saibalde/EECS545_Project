@@ -8,7 +8,7 @@ import numpy as np
 # Random seed
 np.random.seed(0)
 
-def init():
+def init(digit1, digit2, num_train, num_test):
     # Download dataset
     if not os.path.isfile("mnist.pkl"):
         mnist.init()
@@ -17,10 +17,10 @@ def init():
     x_train, t_train, x_test, t_test = mnist.load()
 
     # Subset parameters
-    digit1    = 4
-    digit2    = 9
-    num_train = 1000
-    num_test  = 500
+    #digit1    = 4
+    #digit2    = 9
+    #num_train = 1000
+    #num_test  = 500
 
     # Subset training data
     indices1 = [i for i, j in enumerate(t_train) if ((j==digit1)or(j==digit2)) ]

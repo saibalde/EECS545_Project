@@ -43,7 +43,7 @@ x,y,xtest,ytest = load_subset(4,9,num_train, num_test)
 #ytest = ytest[ind2]
 
 import mnist_subset
-x, y, xtest, ytest = mnist_subset.init()
+x, y, xtest, ytest = mnist_subset.init(4, 9, 1000, 500)
 
 '''
 #### Useing data from class here
