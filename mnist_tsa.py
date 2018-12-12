@@ -6,40 +6,37 @@ import numpy as np
 import time
 import matplotlib.pyplot as plt
 
-from  mnist_to_graph import initialize_graph
+from mnist_to_graph import initialize_graph
 from lp import LP
 from TSA import query_with_TSA
+
+np.random.seed(0)
 
 # Initialize Graph
 num_train = 1000
 num_test = 0
-sigma = 1.0e4
-graph, labels = initialize_graph(4, 9, num_train, num_test, sigma)
+sigma = 2.0e3
+graph, labels = initialize_graph(0, 1, num_train, num_test, sigma)
 
 # Randomly initialize some labels
-init_num_labels = 25
-for i in range(init_num_labels):
+num_init_labels = 1
+init_labels = np.random.choice(np.arange(0, num_train), num_init_labels,
+                               replace=False)
+for i in init_labels:
     graph.set_label(i, labels[i])
 
 # Initial label propagation
 LP(graph)
-accuracy = (graph.labels == labels).sum() / labels.size
-print(len(graph.l), ' ', accuracy)
-
-print(len(graph.u))
 
 # Run the TSA algorithm
-num_max_labels = 75
-accuracy = np.zeros((num_max_labels,1))
-for i in range(num_max_labels):
-    # compute next node to label
-    # queried_index = init_num_labels+i
+num_max_queries = 99
+accuracy = np.zeros(num_max_queries, dtype=np.float)
+
+for i in range(num_max_queries):
+    # TSA step: find next node to query label
     t0 = time.time()
     queried_index = query_with_TSA(graph)
-    t1 = time.time()
-    print('TSA comp. time for iteration',i, 'is:',t1-t0)
-
-    print(queried_index)
+    tsa_time = time.time() - t0
 
     # query the oracle
     label = labels[queried_index]
@@ -47,23 +44,20 @@ for i in range(num_max_labels):
     # update the graph with true label
     graph.set_label(queried_index, label)
 
-    # predict labels
-
+    # LP step: predict labels
     t0 = time.time()    
     LP(graph)
-    t1 = time.time()
-    print('LP comp. time for iteration',i, 'is:',t1-t0)
+    lp_time = time.time() - t0
 
     # compute training error and stop if done
-    accuracy[i] = (graph.labels == labels).sum() / labels.size
+    accuracy[i] = graph.accuracy(labels)
 
-    print(len(graph.l), ' ', accuracy[i])
+    # print some information
+    print('Iteration: ', i + 1)
+    print('    TSA | Time: ', tsa_time, '; Queried index: ', queried_index)
+    print('     LP | Time: ', lp_time, '; Accuracy: ', accuracy[i])
 
 
-iterations = np.arange(num_max_labels)
-print(iterations.shape)
-print(accuracy.shape)
-plt.plot(iterations,accuracy)
-plt.show()
-# predict on test set and compute error
-# ...
+num_queries = num_init_labels + np.arange(num_max_queries)
+plt.plot(num_queries, accuracy)
+plt.savefig('tsa_accuracy.pdf')
