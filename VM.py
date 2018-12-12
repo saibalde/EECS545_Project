@@ -26,8 +26,8 @@ from numpy import linalg
 from mnist_to_graph import initialize_graph
 from lp import LP
 
-n = 100
-l = 25
+n = 300
+l = 30
 graph, labels = initialize_graph(4, 9, n, 0, 2.0e3)
 L = graph.laplacian
 
@@ -100,9 +100,6 @@ print(L_cal)
 # code.interact(local=locals())
 
 for i in L_cal:
-   graph.set_label(i, labels[i])
-
-for i in range(l):
    graph.set_label(i, labels[i])
 
 LP(graph)

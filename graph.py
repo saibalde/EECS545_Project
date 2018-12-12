@@ -147,12 +147,5 @@ class Graph:
     def laplacian_ul(self):
         return subarray(self.laplacian, self.u, self.l)
 
-    def predicted_labels(self):
-        """Return predicted labels for the unlabelled nodes of the graph
-
-        Returns
-        -------
-        numpy.ndarray
-
-        """
-        return self.fu
+    def accuracy(self, true_labels):
+        return (self.labels == true_labels).sum() / true_labels.size
