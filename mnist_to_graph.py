@@ -40,7 +40,7 @@ def load_subset(digit1, digit2, num_train, num_test):
     test_subset = [i for i in range(total_test)
                    if y_test[i] == digit1 or y_train[i] == digit2]
 
-    if len(test_subset) < num_train:
+    if len(test_subset) < num_test:
         raise RuntimeError
     test_subset = np.random.choice(test_subset, size=num_test,
                                    replace=False)
