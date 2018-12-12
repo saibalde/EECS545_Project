@@ -55,7 +55,6 @@ for i in range(num_max_labels):
     print('LP comp. time for iteration',i, 'is:',t1-t0)
 
     # compute training error and stop if done
-    print(type(i))
     accuracy[i] = (graph.labels == labels).sum() / labels.size
 
     print(len(graph.l), ' ', accuracy[i])

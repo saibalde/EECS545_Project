@@ -12,6 +12,7 @@ def query_with_TSA(graph):
    TSA_instance.calc_lookahead_risk()
 
    q = TSA_instance.solve_eem()
+   print('q',q)
 
    return q;
 
@@ -61,7 +62,7 @@ class TSA:
                  np.matmul(np.matmul(self.graph.LuuInv,self.graph.laplacian_ul()),y_ell)) 
 
         else:
-            # print('this should never be executed)
+            print('this should never be executed if using the dongle trick')
             # exit()
             laplacian_uu = self.graph.laplacian[u_excluding_q,:][:,u_excluding_q]
             laplacian_uu_inv = np.linalg.inv(laplacian_uu)
@@ -75,7 +76,7 @@ class TSA:
         if toggle:
             self.f = f
             
-        marginals = 1.0/(1+np.exp(f))
+        marginals = 1.0/(1+np.exp(-f))
 
         return marginals
     
@@ -115,7 +116,7 @@ class TSA:
 
         #LHS is [f_k^{+i}]_{k \in \bar{u}} after observing Y_{\ell \union \{i\}}
         f = 2*np.multiply(left_hadamard,right_hadamard)
-        marginals = 1.0/(1+np.exp(f))
+        marginals = 1.0/(1+np.exp(-f))
 
         return marginals
     
@@ -199,7 +200,9 @@ class TSA:
     def solve_eem(self):
         idx = np.argmin(self.lookahead_risk)
         q = self.graph.u[idx]
-        
+
+        # print('q',q)
+
         return q
         
     
