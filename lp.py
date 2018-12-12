@@ -17,11 +17,12 @@ def LP(graph):
     nLuuInv = np.linalg.inv(np.eye(len(u)) - Puu)
 
     graph.LuuInv = nLuuInv * DuuInv
-    graph.fu = - np.matmul(graph.LuuInv, np.matmul(Pul, graph.labels[l]))
 
-    yu = np.zeros(graph.fu.shape, dtype=np.int8)
-    yu[graph.fu < 0] = -1
-    yu[graph.fu >= 0] = 1
+    fu = np.matmul(nLuuInv, np.matmul(Pul, graph.labels[l]))
+
+    yu = np.zeros(fu.shape, dtype=np.int8)
+    yu[fu < 0] = -1
+    yu[fu >= 0] = 1
 
     graph.labels[u] = yu
 
