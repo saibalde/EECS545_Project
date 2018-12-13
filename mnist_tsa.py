@@ -1,35 +1,42 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import random
 import numpy as np
 import time
 import matplotlib.pyplot as plt
 
-from mnist_to_graph import initialize_graph
+import mnist_subset
+import mnist_graph
+
 from lp import LP
 from TSA import query_with_TSA
 
-np.random.seed(0)
-
-# Initialize Graph
+# Parameters
+digit1    = 4
+digit2    = 9
 num_train = 1000
-num_test = 0
-sigma = 1.0
-graph, labels = initialize_graph(0, 1, num_train, num_test, sigma)
+num_test  = 0
+
+# Load data and generate graph
+x_train, y_train, _, _ = mnist_subset.init(digit1, digit2, num_train,
+                                           num_test)
+x_norm = np.linalg.norm(x_train, axis=1)
+x_train = x_train / x_norm[:, np.newaxis]
+graph = mnist_graph.init(x_train, 1.0)
 
 # Randomly initialize some labels
+np.random.seed(0)
 num_init_labels = 1
 init_labels = np.random.choice(np.arange(0, num_train), num_init_labels,
                                replace=False)
 for i in init_labels:
-    graph.set_label(i, labels[i])
+    graph.set_label(i, y_train[i])
 
 # Initial label propagation
 LP(graph)
 
 # Run the TSA algorithm
-num_max_queries = 99
+num_max_queries = 149
 accuracy = np.zeros(num_max_queries, dtype=np.float)
 
 for i in range(num_max_queries):
@@ -39,7 +46,7 @@ for i in range(num_max_queries):
     tsa_time = time.time() - t0
 
     # query the oracle
-    label = labels[queried_index]
+    label = y_train[queried_index]
 
     # update the graph with true label
     graph.set_label(queried_index, label)
@@ -50,7 +57,7 @@ for i in range(num_max_queries):
     lp_time = time.time() - t0
 
     # compute training error and stop if done
-    accuracy[i] = graph.accuracy(labels)
+    accuracy[i] = graph.accuracy(y_train)
 
     # print some information
     print('Iteration: ', i + 1)
