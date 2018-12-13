@@ -9,3 +9,6 @@ __pycache__/
 # Data files
 *.pkl
 *.gz
+
+# Plots
+*.pdf
