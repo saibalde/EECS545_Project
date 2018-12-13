@@ -4,11 +4,19 @@
 import numpy as np
 from graph import Graph
 
-def init(x):
+def init(x, sigma = None):
     n = x.shape[0]
     graph = Graph(n)
     D = np.zeros((n, n), dtype=np.float)
 
+    # Plain
+    #for i in range(n):
+    #    for j in range(i + 1, n):
+    #        dij = np.linalg.norm(x[i, :] - x[j, :])
+    #        wij = np.exp(-dij**2 / sigma**2)
+    #        graph.set_weight(i, j, wij)
+
+    # kNN type
     for i in range(n):
         for j in range(i + 1, n):
             D[i, j] = np.linalg.norm(x[i, :] - x[j, :])
