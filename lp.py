@@ -22,18 +22,17 @@ def LP(graph, q = None):
 
     if q == None:
         yu = np.zeros(fu.shape, dtype=np.int)
-        yu[fu < 0] = -1
-        yu[fu >= 0] = 1
+        yu[fu <  0.5] = 0
+        yu[fu >= 0.5] = 1
 
         graph.labels[u] = yu
     else:
-        fu_p = 1.0 + fu
-        fu_m = 1.0 - fu
+        gu = 1.0 - fu
 
-        inds = (q * fu_p / fu_p.sum()) > ((1.0 - q) * fu_m / fu_m.sum())
+        inds = (q * fu / fu.sum()) > ((1.0 - q) * gu / gu.sum())
 
         yu = np.zeros(fu.shape, dtype=np.int)
         yu[inds] = 1
-        yu[np.logical_not(inds)] = -1
+        yu[np.logical_not(inds)] = 0
 
         graph.labels[u] = yu

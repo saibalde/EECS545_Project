@@ -23,12 +23,20 @@ After that, LP takes this set and uses it to predict the labels on the rest of t
 import numpy as np
 from numpy import linalg
 
-from mnist_to_graph import initialize_graph
+import mnist_subset
+import mnist_graph
+
 from lp import LP
 
-n = 300
-l = 30
-graph, labels = initialize_graph(4, 9, n, 0, 2.0e3)
+n = 1000
+l = 150
+
+x_train, y_train, _, _ = mnist_subset.init(4, 9, n, 0)
+y_train = (1 + y_train) / 2
+q = (y_train == 1).sum() / y_train.size
+
+graph = mnist_graph.init(x_train)
+
 L = graph.laplacian
 
 #import the graph here, only the Laplacian L is needed
@@ -100,9 +108,9 @@ print(L_cal)
 # code.interact(local=locals())
 
 for i in L_cal:
-   graph.set_label(i, labels[i])
+   graph.set_label(i, y_train[i])
 
-LP(graph)
+LP(graph, q)
 
-train_error = (graph.labels == labels).sum() / labels.size
-print("Training error using VOpt+LP = ", train_error)
+accuracy = graph.accuracy(y_train)
+print("Training accuracy using VOpt+LP = ", accuracy)
