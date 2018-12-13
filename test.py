@@ -28,5 +28,11 @@ from TSA import TSA,  query_with_TSA
 # print(type(p))
 # print(len(l))
 
-graph_al = Graph(0)
-query_with_TSA(graph_al)
+# graph_al = Graph(0)
+# query_with_TSA(graph_al)
+np.random.seed(0)
+a = np.random.randn(5,5)
+norms = np.sum(a**2,axis=0)
+print(a)
+print(norms)
+print(sum(a[:,0]**2))
