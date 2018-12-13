@@ -28,10 +28,10 @@ import mnist_graph
 
 from lp import LP
 
-n = 1000
-l = 150
+n = 400
+l = 40
 
-x_train, y_train, _, _ = mnist_subset.init(4, 9, n, 0)
+x_train, y_train, _ , _ = mnist_subset.init(4, 9, n, 0)
 y_train = (1 + y_train) / 2
 q = (y_train == 1).sum() / y_train.size
 
@@ -70,17 +70,15 @@ A_0=M_inv-np.identity(n) #M^{-1}-I, used in equations (12) and (16)
 def C(p,B): #quantity in right hand side of equation (15), used in equation (12)
     v_hat=np.append(p[:n-1], 0)
     denominator=1.0+np.dot(np.dot(v_hat.T,B),v_hat)
-
     return B-(1.0/denominator)*np.dot(np.dot(np.dot(B,v_hat),v_hat.T),B)
 
 def D(p,A): #quantity in right hand side of equation (18), used in equation (20) for j>1
     denominator=1.0+np.dot(np.dot(p.T,A),p)
-
     return A-(1.0/denominator)*np.dot(np.dot(np.dot(A,p),p.T),A)
 
 # def quantity_20(A,t):
 def quantity_20(A,K):
-    X_mod = np.delete(X,K,0)      #deletes columns of A corresponds to indices in K
+    X_mod = np.delete(X,K,0)   #deletes rows of X corresponds to indices in K
 
     indices = np.arange(X.shape[0])
     indices_mod = np.delete(indices,K)
@@ -90,21 +88,18 @@ def quantity_20(A,K):
     denominator_mat = np.matmul(X_mod,np.sqrt(A))
     denominator_vec = np.sum(denominator_mat**2,axis=1)
     denominator_vec += 1
-
-    # return (1.0/1.0+np.dot(np.dot(X[t,:].T,A),X[t,:]))*np.dot(np.dot(np.dot(np.dot(X[t,:].T,A),M_inv),A),X[t,:])
+    # return (1.0/(1.0+np.dot(np.dot(X[t,:].T,A),X[t,:])))*np.dot(np.dot(np.dot(np.dot(X[t,:].T,A),M_inv),A),X[t,:])
     return np.divide(numerator_vec,denominator_vec), indices_mod
 
 def argmin_outside_K(A,K):
+    min_quantity,indices_mod = quantity_20(A,K)
+    min_index = np.argmin(min_quantity)
     # min_index=list(set(range(n)) - set(K))[0] #initialisation for the loop below
     # min_quantity=quantity_20(A,min_index)
-    min_quantity,indices_mod = quantity_20(A,K)
     # for t in range(n): #here using a loop for finding argmin
     #     if t not in K and min_quantity < quantity_20(A,t):
     #         min_index=t
     #         min_quantity=quantity_20(A,t)
-
-    min_index = np.argmin(min_quantity)
-
     return indices_mod[min_index]
 
 #Finding the first point to label, equation (12)
@@ -124,7 +119,9 @@ for j in range(1,l):
     K.append(index)
 
 L_cal=K
-L_cal = [i+5 for i in range(l)]
+#L_cal = [i for i in range(l)]
+#np.random.seed(0)
+#L_cal= (np.random.choice(n, l, replace=False)).tolist()
 print(L_cal)
 
 # import code
