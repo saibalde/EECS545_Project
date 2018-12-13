@@ -12,7 +12,7 @@ def query_with_TSA(graph):
    TSA_instance.calc_lookahead_risk()
 
    q = TSA_instance.solve_eem()
-   print('q',q)
+   #print('q',q)
 
    return q;
 
