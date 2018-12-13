@@ -35,7 +35,7 @@ class TSA:
         #does this require operator= ?
         self.graph = graph          #may change later from composition to inheritance
         len_u = len(self.graph.u)
-        self.set_y_ell(graph.labels[graph.l])
+        self.y_ell = 2 * graph.labels[graph.l] - 1
         self.f = np.zeros([len_u,1])
         self.lookahead_risk = np.zeros(len_u)
         self.marginals = np.zeros(len_u)

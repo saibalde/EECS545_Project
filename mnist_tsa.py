@@ -14,7 +14,7 @@ from TSA import query_with_TSA
 # Parameters
 digit1    = 4
 digit2    = 9
-num_train = 500
+num_train = 1000
 num_test  = 0
 
 # Load data and generate graph
@@ -28,7 +28,7 @@ print(graph.weights.max())
 
 # Randomly initialize some labels
 np.random.seed(0)
-num_init_labels = 100
+num_init_labels = 25
 init_labels = np.random.choice(np.arange(0, num_train), num_init_labels,
                                replace=False)
 for i in init_labels:
