@@ -20,23 +20,25 @@ num_test  = 0
 # Load data and generate graph
 x_train, y_train, _, _ = mnist_subset.init(digit1, digit2, num_train,
                                            num_test)
-x_norm = np.linalg.norm(x_train, axis=1)
-x_train = x_train / x_norm[:, np.newaxis]
-graph = mnist_graph.init(x_train, 1.0)
+y_train = (1 + y_train) / 2
+graph = mnist_graph.init(x_train)
+q = (y_train == 1).sum() / y_train.size
+
+print(graph.weights.max())
 
 # Randomly initialize some labels
 np.random.seed(0)
-num_init_labels = 1
+num_init_labels = 25
 init_labels = np.random.choice(np.arange(0, num_train), num_init_labels,
                                replace=False)
 for i in init_labels:
     graph.set_label(i, y_train[i])
 
 # Initial label propagation
-LP(graph)
+LP(graph, q)
 
 # Run the TSA algorithm
-num_max_queries = 149
+num_max_queries = 125
 accuracy = np.zeros(num_max_queries, dtype=np.float)
 
 for i in range(num_max_queries):
@@ -53,7 +55,7 @@ for i in range(num_max_queries):
 
     # LP step: predict labels
     t0 = time.time()    
-    LP(graph)
+    LP(graph, q)
     lp_time = time.time() - t0
 
     # compute training error and stop if done
