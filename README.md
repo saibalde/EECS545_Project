@@ -14,7 +14,7 @@ The code is structured as follows:
     -   `lp.py`: Implement LP
     -   `TSA.py`: Implement TSA (`test.py` implements a toy test case)
     -   `VM.py`: Implement VOpt
-    -   `active_SVM.py`, `kmenoids.py`: Implmenet active SVM
+    -   `active_SVM.py`, `kmedoids.py`: Implmenet active SVM
 -   Testing:
     -   `test_lp_random.py`: LP with random queries
     -   `test_lp_tsa.py`: LP with TSA queries (newer version of `mnist_tsa.py`)
