@@ -10,55 +10,51 @@ import scipy.io as sio
 import matplotlib.pyplot as plt
 from sklearn import svm
 
-'''
-num_train = 2000
-num_test = 100
-from mnist_to_graph import *
-x,y,xtest,ytest = load_subset(4,9,num_train, num_test)
+#num_train = 2000
+#num_test = 100
+#from mnist_to_graph import *
+#x,y,xtest,ytest = load_subset(4,9,num_train, num_test)
 ######Finished intialize of data, but training time is too long 
 '''
-
-#import mnist
+import mnist
 #mnist.init()
-#x_train, t_train, x_test, t_test = mnist.load()
+x_train, t_train, x_test, t_test = mnist.load()
 
-#indices1 = [i for i, j in enumerate(t_train) if ((j==4)or(j==9)) ]
-#indices2 = [i for i, j in enumerate(t_test) if ((j==4)or(j==9)) ]
-#x = x_train[indices1,:]
-#y = t_train[indices1]
-#y = np.cast[int](y)
-#y[y==4]=-1
-#y[y==9]= 1
-#ind1 = np.random.choice(np.arange(y.size), 1000)
-#x = x[ind1,:]
-#y = y[ind1]
+indices1 = [i for i, j in enumerate(t_train) if ((j==4)or(j==9)) ]
+indices2 = [i for i, j in enumerate(t_test) if ((j==4)or(j==9)) ]
+x = x_train[indices1,:]
+y = t_train[indices1]
+y = np.cast[int](y)
+y[y==4]=-1
+y[y==9]= 1
+ind1 = np.random.choice(np.arange(y.size), 5000)
+x = x[ind1,:]
+y = y[ind1]
 #
-#xtest = x_test[indices2,:]
-#ytest = t_test[indices2]
-#ytest = np.cast[int](ytest)
-#ytest[ytest==4]=-1
-#ytest[ytest==9]=1
-#ind2 = np.random.choice(np.arange(ytest.size),500)
-#xtest = xtest[ind2,:]
-#ytest = ytest[ind2]
-
+xtest = x_test[indices2,:]
+ytest = t_test[indices2]
+ytest = np.cast[int](ytest)
+ytest[ytest==4]=-1
+ytest[ytest==9]=1
+ind2 = np.random.choice(np.arange(ytest.size),500)
+xtest = xtest[ind2,:]
+ytest = ytest[ind2]
+'''
 import mnist_subset
-x, y, xtest, ytest = mnist_subset.init(4, 9, 1000, 500)
+x, y, xtest, ytest = mnist_subset.init(4, 9, 2500, 500)
 
-'''
 #### Useing data from class here
-mnist_49_3000 = sio.loadmat('mnist_49_3000.mat')
-X = mnist_49_3000['x']
-Y = mnist_49_3000['y']
-X = X.T
-Y = Y[0,:]
-
-numofx =1000
-x = X[:numofx,:]    # X= x+xtest
-y = Y[:numofx]
-xtest = X[numofx:, :]
-ytest = Y[numofx:]
-'''
+#mnist_49_3000 = sio.loadmat('mnist_49_3000.mat')
+#X = mnist_49_3000['x']
+#Y = mnist_49_3000['y']
+#X = X.T
+#Y = Y[0,:]
+#
+#numofx =1000
+#x = X[:numofx,:]    # X= x+xtest
+#y = Y[:numofx]
+#xtest = X[numofx:, :]
+#ytest = Y[numofx:]
 
 numoftrain = 10
 ##### futher divide x into xtrain & xact
@@ -80,29 +76,27 @@ scoreOfx = clf2.score(xtest,ytest)
 print(scoreOfx)
 
 
-'''
-ypred = clf.predict(xtest)
-from sklearn.metrics import classification_report, confusion_matrix
-print(confusion_matrix(ytest, ypred))  
-print(classification_report(ytest, ypred))  
-
-b = clf.support_vectors_
-sample = xact[np.argmin(np.abs(clf.decision_function(xact)))] 
-'''
+#ypred = clf.predict(xtest)
+#from sklearn.metrics import classification_report, confusion_matrix
+#print(confusion_matrix(ytest, ypred))  
+#print(classification_report(ytest, ypred))  
+#
+#b = clf.support_vectors_
+#sample = xact[np.argmin(np.abs(clf.decision_function(xact)))] 
 
 ###### To find out #of samples in xact within margin
 margin = 1 / np.sqrt(np.sum(clf1.coef_ ** 2))
 dist_sort = np.sort(np.abs(clf1.decision_function(xact)))
 cut = np.searchsorted(dist_sort, margin) 
-if cut >= len(xact)/4:
-    cut = len(xact)/4
+if cut >= len(xact)/10:
+    cut = len(xact)/10
     cut = np.cast[int](cut)
     
 idx_sort = np.argsort(np.abs(clf1.decision_function(xact)))
 xact_sort = xact[idx_sort, : ]
 yact_sort = yact[idx_sort]
 
-n = 30
+n = 140
 
 def passive_learning (xtrain, ytrain, xact, yact,n):
     print('passive')
@@ -141,7 +135,7 @@ def kmedoids_active_learning(xtrain,ytrain,xact_sort,yact_sort,cut,n):
     import kmedoids
     print('kmedoids')  
     result = np.zeros(n)
-    for i in range (2,n):
+    for i in range (1,n):
         xact_sort = xact_sort[:cut,:]
         yact_sort = yact_sort[:cut]
         D = pairwise_distances(xact_sort, metric='euclidean')
@@ -160,6 +154,7 @@ def kmedoids_active_learning(xtrain,ytrain,xact_sort,yact_sort,cut,n):
 pasi = passive_learning(xtrain,ytrain,xact,yact,n)
 simp = simple_margin(xtrain,ytrain,xact_sort,yact_sort,n)
 kmed = kmedoids_active_learning(xtrain,ytrain,xact_sort,yact_sort,cut,n)        
+np.savez('svm_data',pasi=pasi,simp=simp,kmed=kmed)
 
 xax = np.linspace(1,n,num=n)
 plt.figure()
@@ -168,3 +163,4 @@ plt.plot(xax,simp,label="simple_margin",color="b")
 plt.plot(xax,kmed,label="k-mediods",color="r")
 plt.legend(loc="best")
 plt.show
+plt.savefig('activesvm.png',pad_inches=0)
