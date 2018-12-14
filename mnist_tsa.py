@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+#Author: Saibal De
+#Class: EECS545 Machine Learning
+#Title: LP-TSA Interface
+#Date: 12-08-2018
+
 import numpy as np
 import time
 import matplotlib.pyplot as plt

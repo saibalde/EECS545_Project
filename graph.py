@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+#Author: Saibal De
+#Class: EECS545 Machine Learning
+#Title: Graph Interface
+#Date: 11-06-2018
+
 """Module for realizing fully connected graphs
 
 This module defines a class for constructing a fully connected graphs.

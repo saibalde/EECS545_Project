@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+#Author: Yi He, Saibal De
+#Class: EECS545 Machine Learning
+#Title: MNIST Data Load
+#Date: 12-06-2018
+
 import os.path
 import mnist
 import numpy as np

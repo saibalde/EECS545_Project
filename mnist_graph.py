@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+#Author: Saibal De
+#Class: EECS545 Machine Learning
+#Title: Graph Construction
+#Date: 12-06-2018
+
 import numpy as np
 from graph import Graph
 

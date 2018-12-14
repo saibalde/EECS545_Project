@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+#Author: Saibal De
+#Class: EECS545 Machine Learning
+#Title: Label Propagation
+#Date: 12-07-2018
+
 import numpy as np
 from graph import Graph, subarray
 
